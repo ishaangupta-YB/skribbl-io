@@ -54,12 +54,13 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 1D — Game flow (Agent D · `features/game`)
 
-- [ ] Game screen composition (canvas + chat + header)
-- [ ] Word-choice UI (drawer picks 1 of 3) + masked word display
-- [ ] Chat / guess panel with correct/close styling
-- [ ] Server-synced countdown timer (uses `phaseEndsAt`)
-- [ ] Live scoreboard + turn reveal + final leaderboard
-- [ ] Reactions (emoji), join/leave + win animations
+- [x] Game screen composition (canvas + chat + header) — phase-routed, responsive `GameScreen`; deps injected via `GameDepsProvider`
+- [x] Word-choice UI (drawer picks 1 of 3) + masked word display — `WordChoiceModal` + `WordBanner` (drawer word / guesser blanks / hints)
+- [x] Chat / guess panel with correct/close styling — `ChatPanel` (per-kind styles, input lock on correct, close nudge)
+- [x] Server-synced countdown timer (uses `phaseEndsAt`) — `useCountdown`/`selectCountdown` re-sync on each `room:state`
+- [x] Live scoreboard + turn reveal + final leaderboard — `Scoreboard` (list/strip), `TurnRevealOverlay`, `GameOverScreen` + confetti
+- [x] Reactions (emoji), join/leave + win animations — `ReactionBar`/`ReactionsLayer`, roster handled in reducer, `Confetti` + Animated FX
+- Note: pure state layer (`state/`) typechecks + 30 vitest cases pass incl. a live 3-client mock playthrough (anti-cheat verified). Built ahead of B's scaffold + C's client via stubbed deps; RN typecheck / react-doctor / web playthrough pending those merges.
 
 ## Phase 2 — Integration (Orchestrator + A)
 
