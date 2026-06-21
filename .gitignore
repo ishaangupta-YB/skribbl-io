@@ -1,0 +1,45 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# turbo
+.turbo/
+
+# expo / RN
+.expo/
+.expo-shared/
+web-build/
+*.orig.*
+ios/Pods/
+android/.gradle/
+android/app/build/
+*.keystore
+!debug.keystore
+
+# cloudflare / wrangler
+.wrangler/
+.dev.vars
+.dev.vars.*
+wrangler.toml.bak
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# os / editor
+.DS_Store
+.idea/
+*.swp

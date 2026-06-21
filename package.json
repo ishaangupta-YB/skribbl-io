@@ -1,0 +1,28 @@
+{
+  "name": "skribbl-cloud",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare-native, cross-platform (iOS/Android/Web) skribbl-style drawing game built with Expo + Cloudflare Workers/Durable Objects.",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "eslint .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "mock": "pnpm --filter @skribbl/mock-ws-server dev"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "eslint": "^9.15.0",
+    "prettier": "^3.3.3",
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.16.0"
+  }
+}
