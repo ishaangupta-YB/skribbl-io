@@ -23,16 +23,16 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 1A — Backend / Durable Object (Agent A · `apps/api`)
 
-- [ ] `wrangler init` + `wrangler.toml` with DO, D1, KV bindings
-- [ ] Hono app: `POST /api/rooms`, `GET /api/rooms`, `GET /api/rooms/:id`, `GET /api/words`
-- [ ] WebSocket upgrade route → `GameRoom` DO (`/api/rooms/:id/ws`)
-- [ ] `GameRoom` DO: hibernating WebSockets, join/leave, host migration
-- [ ] State machine via **DO Alarms** (choosing → drawing → reveal → next/over)
-- [ ] Server-authoritative scoring + word masking + hints + close-guess
-- [ ] D1 schema + Drizzle migrations (word packs, lobby registry)
-- [ ] KV: public lobby list cache + rate limiting
-- [ ] Vitest (`@cloudflare/vitest-pool-workers`) for DO logic
-- [ ] Post `docs/handoffs/backend-ready.md`
+- [x] `wrangler init` + `wrangler.toml` with DO, D1, KV bindings — `apps/api/wrangler.toml` (GAME_ROOM/DB/KV, `nodejs_compat`, SQLite DO)
+- [x] Hono app: `POST /api/rooms`, `GET /api/rooms`, `GET /api/rooms/:id`, `GET /api/words` — `apps/api/src/index.ts`
+- [x] WebSocket upgrade route → `GameRoom` DO (`/api/rooms/:id/ws`) — forwards via `idFromName(roomId)`
+- [x] `GameRoom` DO: hibernating WebSockets, join/leave, host migration — `apps/api/src/durable/GameRoom.ts`
+- [x] State machine via **DO Alarms** (choosing → drawing → reveal → next/over) — single alarm, `phase-end`/`hint` purposes
+- [x] Server-authoritative scoring + word masking + hints + close-guess — all via `@skribbl/shared`; word only to drawer
+- [x] D1 schema + Drizzle migrations (word packs, lobby registry) — `apps/api/src/db/`, `apps/api/migrations/0001_init.sql` (seeds bundled packs)
+- [x] KV: public lobby list cache + rate limiting — `apps/api/src/lib/{lobby,rate-limit}.ts`
+- [x] Vitest (`@cloudflare/vitest-pool-workers`) for DO logic — 18 tests (playthrough, masking, scoring, alarms, host migration)
+- [x] Post `docs/handoffs/backend-ready.md` — filled in
 
 ## Phase 1B — App shell + design system (Agent B · `apps/mobile`)
 
