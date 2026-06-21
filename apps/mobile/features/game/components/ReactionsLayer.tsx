@@ -36,7 +36,7 @@ function ReactionBubble({ reaction }: { reaction: ReactionEvent }): React.JSX.El
   const opacity = progress.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 1, 1, 0] });
   const scale = progress.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0.4, 1.2, 0.9] });
   const drift = (hashFraction(reaction.id) - 0.5) * 60;
-  const leftPct = `${10 + hashFraction(reaction.id) * 70}%`;
+  const leftPct = `${10 + hashFraction(reaction.id) * 70}%` as `${number}%`;
 
   return (
     <Animated.View
