@@ -1,0 +1,34 @@
+name = "skribbl-api"
+main = "src/index.ts"
+compatibility_date = "2025-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+# One Durable Object per room (idFromName(roomId)) — authoritative state,
+# hibernating WebSockets, and alarm-driven turn timers all live here.
+[[durable_objects.bindings]]
+name = "GAME_ROOM"
+class_name = "GameRoom"
+
+# SQLite-backed DO storage is required for per-test storage isolation in
+# @cloudflare/vitest-pool-workers and is the current recommended default.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]
+
+# D1: word packs (bundled defaults are seeded; custom packs added at runtime)
+# and the public lobby registry that powers GET /api/rooms.
+# Create with: wrangler d1 create skribbl  (paste the id below)
+[[d1_databases]]
+binding = "DB"
+database_name = "skribbl"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# KV: cached public lobby list + per-IP rate limiting on room creation.
+# Create with: wrangler kv namespace create skribbl-kv  (paste the id below)
+[[kv_namespaces]]
+binding = "KV"
+id = "0000000000000000000000000000kvid"
+
+[observability]
+enabled = true
