@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@skribbl/shared": ["../../../../../packages/shared/src/index.ts"]
+    }
+  },
+  "include": [
+    "./connection.verify.ts",
+    "../emitter.ts",
+    "../types.ts",
+    "../url.ts",
+    "../RoomConnection.ts"
+  ]
+}
