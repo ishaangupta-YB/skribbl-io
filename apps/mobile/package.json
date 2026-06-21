@@ -10,7 +10,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run --config features/game/vitest.config.ts"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -42,8 +43,12 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "@types/ws": "^8.5.13",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.17",
-    "typescript": "~6.0.3"
+    "tsx": "^4.19.2",
+    "typescript": "~6.0.3",
+    "vitest": "2.1.9",
+    "ws": "^8.18.0"
   }
 }
