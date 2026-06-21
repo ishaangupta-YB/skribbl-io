@@ -7,11 +7,18 @@ import { useEffect, useState } from "react";
  */
 export function useNow(active = true, intervalMs = 250): number {
   const [now, setNow] = useState(() => Date.now());
+  const [prevActive, setPrevActive] = useState(active);
+
+  if (active !== prevActive) {
+    setPrevActive(active);
+    if (active) setNow(Date.now());
+  }
+
   useEffect(() => {
     if (!active) return;
-    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), intervalMs);
     return () => clearInterval(id);
   }, [active, intervalMs]);
+
   return now;
 }

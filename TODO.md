@@ -41,6 +41,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] Create shared folders `features/` (canvas+game), `lib/` (realtime+store) and post `frontend-integration.md`
 - [x] UI kit: Button, IconButton, Input, Card, Sheet(Modal), Avatar, Badge, Toast, Spinner, Text, Stepper, SwitchRow, Chip, Screen (lucide icons)
 - [x] Screens: Home, Create, Join, Lobby (waiting), Room shell (mounts D), Settings — public lobby browser deferred to Phase 3
+- [x] P0 integration: `app/room/[id].tsx` mounts `<GameScreen>` with real B/C/D deps (lib/gameDeps.tsx adapter + CanvasKitProvider) — typecheck + tests green
 - [x] Avatar picker (emoji + color) + on-device persistence (AsyncStorage via zustand persist)
 - [x] App state store (Zustand): `useIdentity`, `useRoomStore` (+ `applyServerMessage`/selectors), `useRoomDraft`
 
@@ -60,7 +61,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] Server-synced countdown timer (uses `phaseEndsAt`) — `useCountdown`/`selectCountdown` re-sync on each `room:state`
 - [x] Live scoreboard + turn reveal + final leaderboard — `Scoreboard` (list/strip), `TurnRevealOverlay`, `GameOverScreen` + confetti
 - [x] Reactions (emoji), join/leave + win animations — `ReactionBar`/`ReactionsLayer`, roster handled in reducer, `Confetti` + Animated FX
-- Note: pure state layer (`state/`) typechecks + 30 vitest cases pass incl. a live 3-client mock playthrough (anti-cheat verified). Built ahead of B's scaffold + C's client via stubbed deps; RN typecheck / react-doctor / web playthrough pending those merges.
+- [x] P1 test gate: `apps/mobile` now has `test` script + `ws`/`@types/ws`/`tsx`/`vitest` devDeps; `playthrough.e2e.test.ts` (30 cases incl. live 3-client mock) passes
+- Note: real B/C/D integration wired in `app/room/[id].tsx` + `lib/gameDeps.tsx`. Local gates: typecheck 5/5 + tests 81 green + lint green. react-doctor: 0 errors, 71 warnings, 47/100; vitest supply-chain warning downgraded to warning (dev-only runner, no browser mode).
 
 ## Phase 2 — Integration (Orchestrator + A)
 
@@ -85,7 +87,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Verification gates (Verifier agent — run after merging each phase)
 
-- [ ] Phase 1 verified — `agents/verify.sh 1` → `docs/verification/phase-1.md` = PASS
+- [~] Phase 1 verified — `agents/verify.sh 1` → `docs/verification/phase-1.md` = PASS (develop pushed; stale agent/verify worktree must be reset before re-run)
 - [ ] Phase 2 verified — `agents/verify.sh 2` → PASS
 - [ ] Phase 3 verified — `agents/verify.sh 3` → PASS
 - [ ] Phase 4 verified — `agents/verify.sh 4` → PASS

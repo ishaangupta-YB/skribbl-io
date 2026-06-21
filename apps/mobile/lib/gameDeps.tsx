@@ -101,21 +101,23 @@ const useRealRoomConnection: UseRoomConnection = (roomId, identity) => {
   // Drives C's store (canvas strokes + `selectCanDraw`) and owns the socket.
   const client = useClientConnection(roomId, identity);
   const setConnection = useConnectionBridge((s) => s.setConnection);
-  const [snapshot, setSnapshot] = useState<RoomSnapshot>(() => ({
-    ...createInitialSnapshot(),
-    status: "connecting",
-  }));
+  const [snapshot, setSnapshot] = useState<RoomSnapshot>(() => createInitialSnapshot());
+  const [prevConnection, setPrevConnection] = useState<RoomConnection | null>(null);
 
   const { connection, start, selectWord, sendChat, react, leave } = client;
 
+  // Reset snapshot whenever the connection instance changes (recommended pattern for
+  // derived state from a prop, not inside an effect).
+  if (connection !== prevConnection) {
+    setPrevConnection(connection);
+    setSnapshot({ ...createInitialSnapshot(), status: connection?.status ?? "connecting" });
+  }
+
+  // Fold server messages into the snapshot. Keep the listener effect separate so it
+  // never triggers a cascading reset-and-apply sequence.
   useEffect(() => {
     setConnection(connection);
-    if (!connection) {
-      setSnapshot({ ...createInitialSnapshot(), status: "connecting" });
-      return;
-    }
-    // Rebuild D's snapshot from the same validated frame stream C's store sees.
-    setSnapshot({ ...createInitialSnapshot(), status: connection.status });
+    if (!connection) return;
     const offMessage = connection.on("message", (message) => {
       setSnapshot((prev) => applyServerMessage(prev, message));
     });
@@ -161,7 +163,7 @@ export function useRealGameDeps(options: { onLeave?: () => void } = {}): GameDep
 
   const identity = useMemo<Identity>(
     () => ({ nickname, avatar }),
-    [nickname, avatar.emoji, avatar.color],
+    [nickname, avatar],
   );
 
   return useMemo<GameDeps>(

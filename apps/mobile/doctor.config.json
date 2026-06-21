@@ -1,0 +1,7 @@
+{
+  "textComponents": ["Txt"],
+  "scope": "full",
+  "supplyChain": {
+    "severity": "warning"
+  }
+}
