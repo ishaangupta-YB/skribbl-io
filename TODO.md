@@ -36,13 +36,13 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 1B — App shell + design system (Agent B · `apps/mobile`)
 
-- [ ] `create-expo-app` (TypeScript) + Expo Router + react-native-web
-- [ ] NativeWind v4 setup + theme tokens (light/dark) + typography
-- [ ] Create shared folders `features/`, `lib/` and post `frontend-integration.md`
-- [ ] UI kit: Button, Input, Card, Modal, Avatar, Toast (lucide icons)
-- [ ] Screens: Home, Create Room, Join Room, Lobby browser, Settings
-- [ ] Avatar picker (emoji + color) + on-device persistence (MMKV/AsyncStorage)
-- [ ] App state store (Zustand): identity, connection, room
+- [x] Expo (TypeScript) + Expo Router + react-native-web — SDK 56; web verified (`expo export` + dev server boot)
+- [x] NativeWind v4 setup + theme tokens (light/dark) + typography — tokens in `global.css` + `tailwind.config.js`, hex mirror in `theme/`
+- [x] Create shared folders `features/` (canvas+game), `lib/` (realtime+store) and post `frontend-integration.md`
+- [x] UI kit: Button, IconButton, Input, Card, Sheet(Modal), Avatar, Badge, Toast, Spinner, Text, Stepper, SwitchRow, Chip, Screen (lucide icons)
+- [x] Screens: Home, Create, Join, Lobby (waiting), Room shell (mounts D), Settings — public lobby browser deferred to Phase 3
+- [x] Avatar picker (emoji + color) + on-device persistence (AsyncStorage via zustand persist)
+- [x] App state store (Zustand): `useIdentity`, `useRoomStore` (+ `applyServerMessage`/selectors), `useRoomDraft`
 
 ## Phase 1C — Realtime canvas + WS client (Agent C)
 
