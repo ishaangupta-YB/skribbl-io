@@ -2,31 +2,24 @@
 
 One Expo (React Native) codebase for **iOS, Android, and Web**. Owned jointly: **B** (shell + design system), **C** (canvas + realtime), **D** (game flow). See the ownership matrix in `AGENTS.md`.
 
-## Scaffold (Agent B, first)
+## Status — scaffold ready (Agent B)
+
+The Expo **SDK 56** scaffold + design system are in place (package `@skribbl/mobile`).
+**Agents C & D: read [`docs/handoffs/frontend-integration.md`](../../docs/handoffs/frontend-integration.md)** —
+it documents the routes, UI kit, theme tokens, and the `useRoomStore` /
+`applyServerMessage` contract you build against.
 
 ```bash
-# from skribbl-cloud/apps/mobile
-pnpm create expo-app@latest . --template default   # TypeScript + Expo Router
-# core deps
-pnpm add @skribbl/shared zustand
-pnpm add @shopify/react-native-skia react-native-gesture-handler react-native-reanimated
-pnpm add nativewind tailwindcss lucide-react-native
-pnpm add @react-native-async-storage/async-storage expo-haptics expo-av
+# from skribbl-cloud/ (repo root)
+pnpm install && pnpm build        # build @skribbl/shared first
+pnpm mock                          # protocol mock on ws://localhost:8787
+pnpm --filter @skribbl/mobile dev  # Expo web (also: ios / android scripts)
 ```
 
-Name the package `@skribbl/mobile`. Ensure scripts include:
-
-```jsonc
-{
-  "scripts": {
-    "dev": "expo start --web",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
-  }
-}
-```
+Notes:
+- **NativeWind v4** (Tailwind v3): style with `className`; tokens in `global.css` + `tailwind.config.js`.
+- `expo-av` is gone in SDK 56 → use **`expo-audio`** for sounds (already installed).
+- Path alias `@/*` → `apps/mobile/*`.
 
 ## Structure (B creates these so C and D have a home)
 
