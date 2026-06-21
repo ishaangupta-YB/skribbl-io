@@ -43,3 +43,12 @@ yarn-error.*
 .DS_Store
 .idea/
 *.swp
+
+# agent worktrees — `git worktree` checkouts live here (inside the repo, but ignored)
+.worktrees/
+
+# transient agent run artifacts (e.g. the generated verifier prompt)
+agents/.run/
+
+# devin CLI local session state
+.devin/
