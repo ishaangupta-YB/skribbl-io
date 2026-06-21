@@ -20,8 +20,10 @@ source ./lib.sh
 phase="${1:-}"
 [ -n "$phase" ] || die "usage: ./verify.sh <phase>   e.g. ./verify.sh 1"
 
-# build a per-run prompt that injects the target phase at the top of verifier.md
-runprompt="$(mktemp)"
+# build a per-run prompt that injects the target phase at the top of verifier.md.
+# Kept INSIDE the repo in a git-ignored dir, so nothing is created outside the root.
+mkdir -p "$AGENTS_DIR/.run"
+runprompt="$AGENTS_DIR/.run/verify-p$phase.md"
 {
   echo "## TARGET PHASE: $phase  — strictly verify ONLY what Phase $phase was supposed to deliver."
   echo

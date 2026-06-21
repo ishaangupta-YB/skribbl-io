@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Create the develop base branch (committing Phase 0) and one git worktree +
-# branch per agent — WITHOUT launching tmux. The start-phase-*.sh scripts call
+# Ensure the develop base branch REF (it NEVER commits — you own git) and create one
+# git worktree + branch per agent under .worktrees/ — WITHOUT launching tmux. The start-phase-*.sh scripts call
 # this logic automatically, so you normally don't need to run this directly.
 # Useful for pre-warming worktrees or re-creating them after cleanup.
 #

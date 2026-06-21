@@ -42,7 +42,7 @@ session: skribbl
 └──────────────┴──────────────┘
 ```
 
-Don't wire this by hand — the `agents/` scripts do it for you (worktrees live OUTSIDE the repo, at `../../skribbl-worktrees/<name>`):
+Don't wire this by hand — the `agents/` scripts do it for you (worktrees live inside the repo at `.worktrees/<name>`, but are git-ignored):
 
 ```bash
 # from skribbl-cloud/agents
@@ -60,7 +60,7 @@ Each agent starts with its `agents/prompts/*.md` role prompt: "You are Agent X. 
 - **A, B, C, D** all depend on **Phase 0** (`@skribbl/shared` + mock). They can then run **in parallel**.
 - **C** and **D** depend on **B**'s Expo scaffold (router + folders + theme). B should land a minimal scaffold first and post `frontend-integration.md`.
 - **Integration (Phase 2)** depends on **A** (post `backend-ready.md`) + B/C/D reaching a playable state against the mock.
-- Because agents don't commit, **you commit B's scaffold and merge it into `develop` first**, then C/D pick it up (run `git -C ../../skribbl-worktrees/<c|d> merge develop`, or just launch C/D after that merge).
+- Because agents don't commit, **you commit B's scaffold and merge it into `develop` first**, then C/D pick it up (from the repo root run `git -C .worktrees/<c|d> merge develop`, or just launch C/D after that merge).
 - After you merge a phase into `develop`, run the **Verifier** (`./verify.sh <phase>`) before moving on.
 
 ## Develop against the mock, integrate against the DO
@@ -87,8 +87,8 @@ If you need a protocol change:
 Agents NEVER touch git. The flow is:
 1. An agent finishes (or hits a milestone), prints a **COMMIT CHECKPOINT** (summary, changed files, verification output, suggested commit message), then stops.
 2. **You** review it (`./review.sh` shows each worktree's diff) and, if happy, commit IN THAT WORKTREE:
-   - `git -C ../../skribbl-worktrees/<agent> add -A`
-   - `git -C ../../skribbl-worktrees/<agent> commit -m "phaseN(<agent>): <summary>"`
+   - `git -C .worktrees/<agent> add -A`   *(paths here are relative to the repo root)*
+   - `git -C .worktrees/<agent> commit -m "phaseN(<agent>): <summary>"`
 3. Merge the branch into `develop` from the repo root: `git switch develop && git merge agent/<agent>`.
 4. Resolve any contract drift yourself (you own `packages/shared`).
 5. After a whole phase is merged, run `./verify.sh <phase>`; act on the report (re-launch an agent to fix, then re-verify).

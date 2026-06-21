@@ -19,10 +19,10 @@ agents/
 
 ## 1. One-time: point the scripts at your Devin CLI
 
-Open `agents/lib.sh` and edit the **DEVIN CLI CONFIG** block at the top. Defaults assume:
+Open `agents/lib.sh` and edit the **DEVIN CLI CONFIG** block at the top. Defaults launch an **interactive** session per pane (you approve every edit/exec request):
 
 ```bash
-devin -p "<PROMPT TEXT>" --model claude-opus-4.8-max-fast
+devin --model claude-opus-4.8-xhigh --prompt-file <PROMPT FILE>
 ```
 
 If your CLI differs, change these (they're the only Devin-specific bits):
@@ -31,11 +31,12 @@ If your CLI differs, change these (they're the only Devin-specific bits):
 |---|---|---|
 | `DEVIN_BIN` | the CLI executable | `devin` |
 | `DEVIN_SUBCMD` | headless task subcommand | `""`, `run`, `task` |
-| `DEVIN_MODEL` | **exact** model id | `claude-opus-4.8-max-fast` |
+| `DEVIN_MODEL` | **exact** model id | `claude-opus-4.8-xhigh` |
 | `DEVIN_MODEL_FLAG` | model flag (or `""`) | `--model` |
-| `DEVIN_PROMPT_MODE` | how the prompt is passed | `flag` \| `stdin` \| `file` |
-| `DEVIN_PROMPT_FLAG` | flag for `flag` mode | `-p` |
-| `DEVIN_PROMPT_FILE_FLAG` | flag for `file` mode | `--prompt-file` |
+| `DEVIN_PROMPT_MODE` | how the prompt is passed | **`file`** (default, interactive) \| `flag` \| `stdin` |
+| `DEVIN_PROMPT_FLAG` | flag for `flag` mode (non-interactive) | `-p` |
+| `DEVIN_PROMPT_FILE_FLAG` | flag for `file` mode (interactive) | `--prompt-file` |
+| `DEVIN_PERMISSION_MODE` | tool approvals (empty = devin prompts you) | `""` \| `auto` \| `dangerous` |
 
 You can also override per run, e.g.: `DEVIN_MODEL=opus-x DEVIN_PROMPT_MODE=stdin ./start-phase-1.sh`.
 
@@ -55,7 +56,7 @@ cd skribbl-cloud/agents
 
 What it does automatically (it NEVER commits):
 1. Ensures a `develop` branch ref exists (pointed at your last commit — it does NOT create a commit).
-2. Creates `agent/<name>` branches + git worktrees under `../../skribbl-worktrees/<name>` (OUTSIDE the repo & workspace).
+2. Creates `agent/<name>` branches + git worktrees under `.worktrees/<name>` (inside the repo, but git-ignored).
 3. Runs `pnpm install && pnpm build` in each worktree (skip with `SKIP_INSTALL=1`).
 4. Opens tmux session `skribbl`, one tiled pane per agent, and launches `devin` with that agent's prompt + model.
 5. Attaches you to the window. Each agent works, prints a **COMMIT CHECKPOINT**, and stops — **you** commit (see §4).
@@ -74,8 +75,8 @@ Each agent prints a **COMMIT CHECKPOINT** and stops. You review, commit, merge, 
 ```bash
 ./review.sh                                       # read-only: what each agent changed
 # commit an agent's work (in ITS worktree):
-git -C ../../skribbl-worktrees/a-backend add -A
-git -C ../../skribbl-worktrees/a-backend commit -m "phase1(a-backend): DO + REST"
+git -C ../.worktrees/a-backend add -A
+git -C ../.worktrees/a-backend commit -m "phase1(a-backend): DO + REST"
 # merge it into develop (from the repo root = skribbl-cloud, i.e. `..` here):
 git -C .. switch develop && git -C .. merge agent/a-backend
 # ...repeat for each finished agent, then gate the phase:
@@ -84,7 +85,7 @@ git -C .. switch develop && git -C .. merge agent/a-backend
 ./start-phase-2.sh                                # integration on the merged result
 ```
 
-**B's scaffold goes first.** C and D need B's Expo scaffold. Let B reach its `scaffold-ready` checkpoint, commit + merge it into `develop`, then either launch C/D (they'll branch off the updated `develop`) or run `git -C ../../skribbl-worktrees/<c|d> merge develop`.
+**B's scaffold goes first.** C and D need B's Expo scaffold. Let B reach its `scaffold-ready` checkpoint, commit + merge it into `develop`, then either launch C/D (they'll branch off the updated `develop`) or run `git -C ../.worktrees/<c|d> merge develop`.
 
 `./status.sh` shows where everything stands. `./stop.sh --worktrees` removes worktrees when fully done. **Push only when you decide:** `git -C .. push -u origin develop`.
 

@@ -4,10 +4,13 @@
 # Sourced by start-phase-*.sh, setup-worktrees.sh, stop.sh, status.sh.
 #
 # It does three things:
-#   1) ensures Phase 0 is committed to a `develop` base branch,
-#   2) creates one isolated git worktree + branch per agent,
+#   1) ensures a `develop` base branch REF exists (it NEVER commits — you own git),
+#   2) creates one isolated git worktree + branch per agent (inside .worktrees/),
 #   3) opens ONE tmux window with one pane per agent, each running the
 #      Devin CLI headlessly with that agent's prompt + model.
+#
+# Everything it creates (worktrees, run artifacts) stays INSIDE this repo and is
+# git-ignored — nothing is written outside the repo root.
 #
 set -euo pipefail
 
@@ -18,12 +21,20 @@ set -euo pipefail
 # ============================================================================
 : "${DEVIN_BIN:=devin}"                         # the CLI executable on your PATH
 : "${DEVIN_SUBCMD:=}"                            # subcommand for a headless task: "" | "run" | "task"
-: "${DEVIN_MODEL:=claude-opus-4.8-max-fast}"    # <-- EXACT model id your devin accepts (run e.g. `devin models`)
+: "${DEVIN_MODEL:=claude-opus-4.8-xhigh}"       # <-- EXACT model id your devin accepts (verified accepted by this CLI)
 : "${DEVIN_MODEL_FLAG:=--model}"                # flag to select the model ("" if you set it via devin config)
-: "${DEVIN_PROMPT_MODE:=flag}"                  # how the prompt is passed: flag | stdin | file
+: "${DEVIN_PROMPT_MODE:=file}"                  # how the prompt is passed: flag | stdin | file
+                                                #   file = `devin --prompt-file <path>` (NO -p) => INTERACTIVE: devin opens its
+                                                #          TUI seeded with the prompt and you APPROVE each edit/exec request.
+                                                #   flag = `devin -p "<text>"`            => non-interactive (print response & exit).
 : "${DEVIN_PROMPT_FLAG:=-p}"                     # used when DEVIN_PROMPT_MODE=flag   ->  devin -p "<prompt text>"
 : "${DEVIN_PROMPT_FILE_FLAG:=--prompt-file}"     # used when DEVIN_PROMPT_MODE=file   ->  devin --prompt-file <path>
 # (stdin mode runs:  devin <SUBCMD> --model <MODEL> < <prompt-file> )
+# Permission mode: left EMPTY so devin uses its built-in default ("auto"), which
+# PROMPTS YOU to approve every edit/exec tool — you stay in control of all writes.
+# (Set "dangerous" only for UNATTENDED runs where agents auto-approve ALL tools.)
+: "${DEVIN_PERMISSION_MODE:=}"                   # ""(devin default: prompts you) | auto | dangerous
+: "${DEVIN_PERMISSION_FLAG:=--permission-mode}"  # flag to set it ("" to omit)
 
 # ============================================================================
 # tmux / git config (override via env if you like)
@@ -38,7 +49,7 @@ set -euo pipefail
 AGENTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPTS_DIR="$AGENTS_DIR/prompts"
 REPO_ROOT="$(cd "$AGENTS_DIR/.." && pwd)"             # .../skribbl-cloud  (the git repo root)
-: "${WORKTREE_ROOT:=$(cd "$REPO_ROOT/../.." && pwd)/skribbl-worktrees}"  # worktrees OUTSIDE the repo & workspace
+: "${WORKTREE_ROOT:=$REPO_ROOT/.worktrees}"            # git worktrees live INSIDE the repo, but are git-ignored (.gitignore)
 
 # ---- pretty logging ----
 log()  { printf '\033[1;36m[agents]\033[0m %s\n' "$*"; }
@@ -119,14 +130,19 @@ build_devin_cmd() {
   if [ -n "$DEVIN_MODEL_FLAG" ] && [ -n "$DEVIN_MODEL" ]; then
     model_part="$DEVIN_MODEL_FLAG $DEVIN_MODEL"
   fi
+  local perm_part=""
+  if [ -n "$DEVIN_PERMISSION_FLAG" ] && [ -n "$DEVIN_PERMISSION_MODE" ]; then
+    perm_part="$DEVIN_PERMISSION_FLAG $DEVIN_PERMISSION_MODE"
+  fi
+  local flags="$model_part $perm_part"
   local invoke
   case "$DEVIN_PROMPT_MODE" in
-    stdin) invoke="$DEVIN_BIN $DEVIN_SUBCMD $model_part < '$prompt_file'" ;;
-    file)  invoke="$DEVIN_BIN $DEVIN_SUBCMD $model_part $DEVIN_PROMPT_FILE_FLAG '$prompt_file'" ;;
-    *)     invoke="$DEVIN_BIN $DEVIN_SUBCMD $model_part $DEVIN_PROMPT_FLAG \"\$(cat '$prompt_file')\"" ;;
+    stdin) invoke="$DEVIN_BIN $DEVIN_SUBCMD $flags < '$prompt_file'" ;;
+    file)  invoke="$DEVIN_BIN $DEVIN_SUBCMD $flags $DEVIN_PROMPT_FILE_FLAG '$prompt_file'" ;;
+    *)     invoke="$DEVIN_BIN $DEVIN_SUBCMD $flags $DEVIN_PROMPT_FLAG \"\$(cat '$prompt_file')\"" ;;
   esac
-  local header="echo '────────────────────────────────────────────'; echo ' agent : $label'; echo ' model : $DEVIN_MODEL'; echo ' prompt: $prompt_file'; echo ' dir   : '\$(pwd); echo '────────────────────────────────────────────'"
-  local footer="rc=\$?; echo; echo \"[agent '$label' exited (code \$rc) — shell kept open; re-run: \$(history 1 2>/dev/null)]\"; exec \$SHELL"
+  local header="echo '────────────────────────────────────────────'; echo ' agent : $label'; echo ' model : $DEVIN_MODEL'; echo ' perms : ${DEVIN_PERMISSION_MODE:-<devin default>}'; echo ' prompt: $prompt_file'; echo ' dir   : '\$(pwd); echo '────────────────────────────────────────────'"
+  local footer="rc=\$?; echo; echo \"[agent '$label' exited (code \$rc) — shell kept open; re-run: \$(fc -ln -1 2>/dev/null)]\"; exec \$SHELL"
   printf '%s; %s; %s' "$header" "$invoke" "$footer"
 }
 
