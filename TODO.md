@@ -46,11 +46,11 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 1C — Realtime canvas + WS client (Agent C)
 
-- [ ] Typed WS client in `lib/realtime` (connect, reconnect, heartbeat, zod-validated)
-- [ ] Skia canvas: strokes, colors, brush sizes, eraser, undo, clear
-- [ ] Normalized coordinates (0–1) + coalesced/throttled stroke batching
-- [ ] Render remote `draw` / `draw:clear` / `draw:undo`
-- [ ] Works on iOS, Android, and Web (CanvasKit WASM config)
+- [x] Typed WS client in `lib/realtime` (connect, reconnect, heartbeat, zod-validated) — `RoomConnection` + `useRoomConnection`; e2e-verified vs mock (20/20 checks)
+- [x] Skia canvas: strokes, colors, brush sizes, eraser, undo, clear — `DrawCanvas` + `Toolbar` + `useDrawingBoard`
+- [x] Normalized coordinates (0–1) + coalesced/throttled stroke batching — `coords.ts` + `StrokeBatcher` (~30fps, bridged segments); pure-logic verified
+- [x] Render remote `draw` / `draw:clear` / `draw:undo` — store reconstructs full strokes from segments; resets on `draw:clear` + `turn:start`
+- [~] Works on iOS, Android, and Web (CanvasKit WASM config) — cross-platform code + `CanvasKitProvider` (web WASM loader, native no-op) + docs delivered; typechecks vs real Skia/gesture-handler. Visual run on all 3 platforms pending B's Expo scaffold. See `docs/handoffs/canvas-integration.md`.
 
 ## Phase 1D — Game flow (Agent D · `features/game`)
 
