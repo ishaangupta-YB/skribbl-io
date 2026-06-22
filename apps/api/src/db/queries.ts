@@ -1,6 +1,6 @@
-import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
-import { lobbyRooms, wordPacks, type LobbyRoomRow } from "./schema";
+import { lobbyRooms, wordPacks, words, type LobbyRoomRow, type WordPackRow, type WordRow } from "./schema";
 
 export type Database = DrizzleD1Database<Record<string, never>>;
 
@@ -59,18 +59,99 @@ export async function listPublicRooms(d1: D1Database, limit = 50): Promise<Lobby
     .limit(limit);
 }
 
-export async function listWordPackRows(d1: D1Database): Promise<{ id: string; name: string; description: string; words: string[] }[]> {
-  const rows = await getDb(d1).select().from(wordPacks);
-  return rows.map((r) => ({ id: r.id, name: r.name, description: r.description, words: r.words ?? [] }));
+/** Return D1 word packs with their words joined in. */
+export async function listWordPackRows(
+  d1: D1Database,
+): Promise<{ id: string; name: string; description: string; isPublic: boolean; createdBy: string | null; words: string[] }[]> {
+  const rows = await getDb(d1)
+    .select({
+      id: wordPacks.id,
+      name: wordPacks.name,
+      description: wordPacks.description,
+      isPublic: wordPacks.isPublic,
+      createdBy: wordPacks.createdBy,
+      word: words.word,
+    })
+    .from(wordPacks)
+    .leftJoin(words, eq(words.packId, wordPacks.id));
+
+  const byId = new Map<string, { id: string; name: string; description: string; isPublic: boolean; createdBy: string | null; words: string[] }>();
+  for (const r of rows) {
+    let entry = byId.get(r.id);
+    if (!entry) {
+      entry = {
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        isPublic: r.isPublic,
+        createdBy: r.createdBy,
+        words: [],
+      };
+      byId.set(r.id, entry);
+    }
+    if (r.word) entry.words.push(r.word);
+  }
+  return [...byId.values()];
+}
+
+/** Fetch a single D1 word pack with its words. */
+export async function getWordPackById(
+  d1: D1Database,
+  id: string,
+): Promise<{ id: string; name: string; description: string; isPublic: boolean; createdBy: string | null; createdAt: number; words: string[] } | null> {
+  const [pack, wordRows] = await Promise.all([
+    getDb(d1).select().from(wordPacks).where(eq(wordPacks.id, id)).limit(1),
+    getDb(d1).select({ word: words.word }).from(words).where(eq(words.packId, id)),
+  ]);
+  if (!pack[0]) return null;
+  return {
+    ...pack[0],
+    words: wordRows.map((r) => r.word),
+  };
 }
 
 /** Flatten the words of the given (custom) pack ids into a single list. */
 export async function getPackWords(d1: D1Database, ids: string[]): Promise<string[]> {
   if (ids.length === 0) return [];
-  const rows = await getDb(d1).select({ words: wordPacks.words }).from(wordPacks).where(inArray(wordPacks.id, ids));
-  const out: string[] = [];
-  for (const r of rows) {
-    for (const w of r.words ?? []) out.push(w);
-  }
-  return out;
+  const rows = await getDb(d1)
+    .select({ word: words.word })
+    .from(words)
+    .where(inArray(words.packId, ids));
+  return rows.map((r) => r.word);
 }
+
+export interface WordPackInsert {
+  id: string;
+  name: string;
+  description: string;
+  isPublic: boolean;
+  createdBy: string | null;
+  words: string[];
+}
+
+/** Insert a custom word pack and its words. */
+export async function insertWordPack(d1: D1Database, pack: WordPackInsert): Promise<WordPackRow & { words: string[] }> {
+  const db = getDb(d1);
+  await db.insert(wordPacks).values({
+    id: pack.id,
+    name: pack.name,
+    description: pack.description,
+    isPublic: pack.isPublic,
+    createdBy: pack.createdBy,
+  });
+  if (pack.words.length > 0) {
+    await db.insert(words).values(pack.words.map((w) => ({ packId: pack.id, word: w })));
+  }
+  return { ...pack, createdAt: Date.now() };
+}
+
+/** Count the words in a pack. */
+export async function countWordsInPack(d1: D1Database, packId: string): Promise<number> {
+  const rows = await getDb(d1)
+    .select({ count: sql<number>`count(*)`.as("count") })
+    .from(words)
+    .where(eq(words.packId, packId));
+  return rows[0]?.count ?? 0;
+}
+
+export type { WordPackRow, WordRow, LobbyRoomRow };

@@ -80,4 +80,77 @@ describe("REST API", () => {
     const resp = await SELF.fetch(`${BASE}/api/rooms/ABCD/ws`);
     expect(resp.status).toBe(426);
   });
+
+  describe("word packs", () => {
+    it("POST /api/word-packs creates a custom pack and GET /api/words lists it", async () => {
+      const create = await SELF.fetch(`${BASE}/api/word-packs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: "My Pack",
+          description: "A test pack",
+          words: ["robot", "dragon", "taco"],
+          createdBy: "Tester",
+        }),
+      });
+      expect(create.status).toBe(201);
+      const { pack } = (await create.json()) as { pack: { id: string; words: string[] } };
+      expect(pack.words).toContain("robot");
+      expect(pack.words).toContain("dragon");
+      expect(pack.words).toContain("taco");
+
+      const list = await SELF.fetch(`${BASE}/api/words`);
+      expect(list.status).toBe(200);
+      const { packs } = (await list.json()) as { packs: { id: string }[] };
+      expect(packs.some((p) => p.id === pack.id)).toBe(true);
+    });
+
+    it("POST /api/word-packs rejects invalid input", async () => {
+      const resp = await SELF.fetch(`${BASE}/api/word-packs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: "", words: [] }),
+      });
+      expect(resp.status).toBe(400);
+      const body = (await resp.json()) as { error: string };
+      expect(body.error).toBe("INVALID_MESSAGE");
+    });
+
+    it("POST /api/word-packs rejects profanity and oversized words", async () => {
+      const resp = await SELF.fetch(`${BASE}/api/word-packs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: "Bad Pack",
+          words: ["fuck", "a".repeat(31)],
+        }),
+      });
+      expect(resp.status).toBe(400);
+      const body = (await resp.json()) as { error: string };
+      expect(body.error).toBe("INVALID_MESSAGE");
+    });
+
+    it("GET /api/word-packs/:id returns a created pack", async () => {
+      const create = await SELF.fetch(`${BASE}/api/word-packs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: "Fetchable Pack",
+          words: ["unicorn", "rainbow"],
+        }),
+      });
+      const { pack } = (await create.json()) as { pack: { id: string } };
+
+      const resp = await SELF.fetch(`${BASE}/api/word-packs/${pack.id}`);
+      expect(resp.status).toBe(200);
+      const body = (await resp.json()) as { pack: { words: string[] } };
+      expect(body.pack.words).toContain("unicorn");
+      expect(body.pack.words).toContain("rainbow");
+    });
+
+    it("GET /api/word-packs/:id returns 404 for unknown packs", async () => {
+      const resp = await SELF.fetch(`${BASE}/api/word-packs/unknown-pack-id`);
+      expect(resp.status).toBe(404);
+    });
+  });
 });

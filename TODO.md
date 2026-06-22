@@ -76,7 +76,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 ## Phase 3 — Enhancements
 
 - [ ] Public lobby browser (D1 + KV)
-- [ ] Custom word packs (host-created, D1)
+- [x] Custom word packs (host-created, D1) — normalized `word_packs` + `words` tables; `POST /api/word-packs` + `GET /api/word-packs/:id`; pack picker + custom-word textarea + persistence in Create Room; default pack remains fallback.
 - [ ] Sounds + haptics; theming; transitions + confetti
 - [ ] Hints polish; close-guess UX
 

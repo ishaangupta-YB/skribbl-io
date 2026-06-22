@@ -42,6 +42,24 @@ export interface GetWordsResponse {
   packs: WordPackSummary[];
 }
 
+export interface CreateWordPackInput {
+  name: string;
+  description?: string;
+  words: string | string[];
+  isPublic?: boolean;
+  createdBy?: string;
+}
+
+export interface WordPackDetail extends WordPackSummary {
+  isPublic: boolean;
+  createdBy: string | null;
+  createdAt?: number;
+}
+
+export interface CreateWordPackResponse {
+  pack: WordPackDetail;
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | null;
@@ -101,4 +119,15 @@ export async function listWordPacks(): Promise<GetWordsResponse> {
   const res = await fetch(`${HTTP_BASE_URL}/api/words`);
   if (!res.ok) throw await parseError(res);
   return (await res.json()) as GetWordsResponse;
+}
+
+/** Create a custom word pack. */
+export async function createWordPack(input: CreateWordPackInput): Promise<CreateWordPackResponse> {
+  const res = await fetch(`${HTTP_BASE_URL}/api/word-packs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw await parseError(res);
+  return (await res.json()) as CreateWordPackResponse;
 }
