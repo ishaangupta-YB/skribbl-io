@@ -31,4 +31,4 @@ runprompt="$AGENTS_DIR/.run/verify-p$phase.md"
 } > "$runprompt"
 
 log "launching strict Verifier for Phase $phase (worktree branch: agent/verify)"
-launch_phase "verify-p$phase" "verify|$runprompt"
+launch_phase "verify-p$phase" "verify|$runprompt|glm-5.2"

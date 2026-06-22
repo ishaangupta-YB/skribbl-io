@@ -12,4 +12,4 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./lib.sh
 
 launch_phase "phase2" \
-  "integration|phase-2-integration.md"
+  "integration|phase-2-integration.md|glm-5.2"

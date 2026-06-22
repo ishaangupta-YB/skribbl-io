@@ -12,5 +12,5 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./lib.sh
 
 launch_phase "phase4" \
-  "qa|phase-4-qa.md" \
-  "deploy|phase-4-deploy.md"
+  "qa|phase-4-qa.md|glm-5.2" \
+  "deploy|phase-4-deploy.md|kimi-k2.7"

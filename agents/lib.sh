@@ -21,7 +21,9 @@ set -euo pipefail
 # ============================================================================
 : "${DEVIN_BIN:=devin}"                         # the CLI executable on your PATH
 : "${DEVIN_SUBCMD:=}"                            # subcommand for a headless task: "" | "run" | "task"
-: "${DEVIN_MODEL:=claude-opus-4.8-xhigh}"       # <-- EXACT model id your devin accepts (verified accepted by this CLI)
+: "${DEVIN_MODEL:=glm-5.2}"                     # <-- DEFAULT model id (fallback). Per-agent overrides via the
+                                                #     third field in launch_phase entries: "name|prompt.md|model-id".
+                                                #     Available models (verified): glm-5.2, kimi-k2.7
 : "${DEVIN_MODEL_FLAG:=--model}"                # flag to select the model ("" if you set it via devin config)
 : "${DEVIN_PROMPT_MODE:=file}"                  # how the prompt is passed: flag | stdin | file
                                                 #   file = `devin --prompt-file <path>` (NO -p) => INTERACTIVE: devin opens its
@@ -123,12 +125,14 @@ ensure_worktree() {
 }
 
 # ---- build the shell command that launches one Devin agent in a pane ----
-# usage: build_devin_cmd <prompt_file> <agent_label>
+# usage: build_devin_cmd <prompt_file> <agent_label> [model]
+#   model: optional per-agent model id; falls back to DEVIN_MODEL if empty/unset.
 build_devin_cmd() {
-  local prompt_file="$1" label="$2"
+  local prompt_file="$1" label="$2" model="${3:-}"
+  : "${model:=$DEVIN_MODEL}"
   local model_part=""
-  if [ -n "$DEVIN_MODEL_FLAG" ] && [ -n "$DEVIN_MODEL" ]; then
-    model_part="$DEVIN_MODEL_FLAG $DEVIN_MODEL"
+  if [ -n "$DEVIN_MODEL_FLAG" ] && [ -n "$model" ]; then
+    model_part="$DEVIN_MODEL_FLAG $model"
   fi
   local perm_part=""
   if [ -n "$DEVIN_PERMISSION_FLAG" ] && [ -n "$DEVIN_PERMISSION_MODE" ]; then
@@ -141,13 +145,15 @@ build_devin_cmd() {
     file)  invoke="$DEVIN_BIN $DEVIN_SUBCMD $flags $DEVIN_PROMPT_FILE_FLAG '$prompt_file'" ;;
     *)     invoke="$DEVIN_BIN $DEVIN_SUBCMD $flags $DEVIN_PROMPT_FLAG \"\$(cat '$prompt_file')\"" ;;
   esac
-  local header="echo '────────────────────────────────────────────'; echo ' agent : $label'; echo ' model : $DEVIN_MODEL'; echo ' perms : ${DEVIN_PERMISSION_MODE:-<devin default>}'; echo ' prompt: $prompt_file'; echo ' dir   : '\$(pwd); echo '────────────────────────────────────────────'"
+  local header="echo '────────────────────────────────────────────'; echo ' agent : $label'; echo ' model : $model'; echo ' perms : ${DEVIN_PERMISSION_MODE:-<devin default>}'; echo ' prompt: $prompt_file'; echo ' dir   : '\$(pwd); echo '────────────────────────────────────────────'"
   local footer="rc=\$?; echo; echo \"[agent '$label' exited (code \$rc) — shell kept open; re-run: \$(fc -ln -1 2>/dev/null)]\"; exec \$SHELL"
   printf '%s; %s; %s' "$header" "$invoke" "$footer"
 }
 
 # ---- launch one tmux window with one pane per agent ----
-# usage: launch_phase <window_name> "name|prompt_basename" "name|prompt_basename" ...
+# usage: launch_phase <window_name> "name|prompt_basename[|model]" ...
+#   Each entry: "name|promptfile" or "name|promptfile|model-id"
+#   The optional third field overrides DEVIN_MODEL for that agent.
 launch_phase() {
   local window="$1"; shift
   [ "$#" -gt 0 ] || die "launch_phase: no agents given"
@@ -155,10 +161,10 @@ launch_phase() {
   preflight
   ensure_base_branch
 
-  local names=() prompts=() dirs=()
-  local entry name promptfile prompt branch wt
+  local names=() prompts=() dirs=() models=()
+  local entry name promptfile model prompt branch wt
   for entry in "$@"; do
-    IFS='|' read -r name promptfile <<< "$entry"
+    IFS='|' read -r name promptfile model <<< "$entry"
     case "$promptfile" in
       /*) prompt="$promptfile" ;;
       *)  prompt="$PROMPTS_DIR/$promptfile" ;;
@@ -167,7 +173,7 @@ launch_phase() {
     branch="agent/$name"
     wt="$WORKTREE_ROOT/$name"
     ensure_worktree "$branch" "$wt"
-    names+=("$name"); prompts+=("$prompt"); dirs+=("$wt")
+    names+=("$name"); prompts+=("$prompt"); dirs+=("$wt"); models+=("${model:-}")
   done
 
   if tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
@@ -192,7 +198,7 @@ launch_phase() {
 
   for i in "${!names[@]}"; do
     tmux select-pane -t "${pane_ids[$i]}" -T "${names[$i]}"
-    local cmd; cmd="$(build_devin_cmd "${prompts[$i]}" "${names[$i]}")"
+    local cmd; cmd="$(build_devin_cmd "${prompts[$i]}" "${names[$i]}" "${models[$i]}")"
     tmux send-keys -t "${pane_ids[$i]}" "$cmd" C-m
   done
 

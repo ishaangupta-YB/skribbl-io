@@ -15,7 +15,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./lib.sh
 
 launch_phase "phase1" \
-  "a-backend|agent-a-backend.md" \
-  "b-shell|agent-b-shell.md" \
-  "c-canvas|agent-c-canvas.md" \
-  "d-game|agent-d-game.md"
+  "a-backend|agent-a-backend.md|glm-5.2" \
+  "b-shell|agent-b-shell.md|glm-5.2" \
+  "c-canvas|agent-c-canvas.md|kimi-k2.7" \
+  "d-game|agent-d-game.md|kimi-k2.7"

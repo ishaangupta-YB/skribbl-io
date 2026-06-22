@@ -14,6 +14,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./lib.sh
 
 launch_phase "phase3" \
-  "lobby-d1|phase-3-lobby-d1.md" \
-  "word-packs|phase-3-word-packs.md" \
-  "polish|phase-3-polish.md"
+  "lobby-d1|phase-3-lobby-d1.md|kimi-k2.7" \
+  "word-packs|phase-3-word-packs.md|kimi-k2.7" \
+  "polish|phase-3-polish.md|kimi-k2.7"

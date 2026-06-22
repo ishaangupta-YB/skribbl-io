@@ -22,7 +22,7 @@ agents/
 Open `agents/lib.sh` and edit the **DEVIN CLI CONFIG** block at the top. Defaults launch an **interactive** session per pane (you approve every edit/exec request):
 
 ```bash
-devin --model claude-opus-4.8-xhigh --prompt-file <PROMPT FILE>
+devin --model glm-5.2 --prompt-file <PROMPT FILE>
 ```
 
 If your CLI differs, change these (they're the only Devin-specific bits):
@@ -31,14 +31,14 @@ If your CLI differs, change these (they're the only Devin-specific bits):
 |---|---|---|
 | `DEVIN_BIN` | the CLI executable | `devin` |
 | `DEVIN_SUBCMD` | headless task subcommand | `""`, `run`, `task` |
-| `DEVIN_MODEL` | **exact** model id | `claude-opus-4.8-xhigh` |
+| `DEVIN_MODEL` | **exact** model id | `glm-5.2` |
 | `DEVIN_MODEL_FLAG` | model flag (or `""`) | `--model` |
 | `DEVIN_PROMPT_MODE` | how the prompt is passed | **`file`** (default, interactive) \| `flag` \| `stdin` |
 | `DEVIN_PROMPT_FLAG` | flag for `flag` mode (non-interactive) | `-p` |
 | `DEVIN_PROMPT_FILE_FLAG` | flag for `file` mode (interactive) | `--prompt-file` |
 | `DEVIN_PERMISSION_MODE` | tool approvals (empty = devin prompts you) | `""` \| `auto` \| `dangerous` |
 
-You can also override per run, e.g.: `DEVIN_MODEL=opus-x DEVIN_PROMPT_MODE=stdin ./start-phase-1.sh`.
+You can also override per run, e.g.: `DEVIN_MODEL=kimi-k2.7 DEVIN_PROMPT_MODE=stdin ./start-phase-1.sh`.
 
 Verify your exact flags with your CLI's help (e.g. `devin --help`, `devin models`). To preview the command without launching agents: `DEVIN_PROMPT_MODE=stdin bash -c 'source ./lib.sh; build_devin_cmd "$PWD/prompts/agent-a-backend.md" a-backend; echo'`.
 
