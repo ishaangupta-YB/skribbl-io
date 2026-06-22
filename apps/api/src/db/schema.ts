@@ -26,6 +26,7 @@ export const lobbyRooms = sqliteTable(
   "lobby_rooms",
   {
     roomId: text("room_id").primaryKey(),
+    name: text("name").notNull().default(""),
     isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),
     phase: text("phase").notNull().default("lobby"),
     playerCount: integer("player_count").notNull().default(0),

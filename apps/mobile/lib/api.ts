@@ -17,6 +17,7 @@ export interface CreateRoomResponse {
 /** Public-facing room metadata returned by `GET /api/rooms/:id` and `/api/rooms`. */
 export interface RoomMeta {
   roomId: string;
+  name: string;
   isPublic: boolean;
   phase: string;
   playerCount: number;
@@ -29,6 +30,19 @@ export interface RoomMeta {
 export interface GetRoomResponse {
   exists: boolean;
   room?: RoomMeta;
+}
+
+export interface ListPublicRoomsOptions {
+  status?: "open" | "joinable" | "all";
+  page?: number;
+  limit?: number;
+}
+
+export interface ListPublicRoomsResponse {
+  rooms: RoomMeta[];
+  page: number;
+  limit: number;
+  total: number;
 }
 
 export interface WordPackSummary {
@@ -69,12 +83,17 @@ async function parseError(res: Response): Promise<ApiError> {
   return new ApiError(message, res.status, code);
 }
 
-/** Create a room with the given (partial) settings. Returns the authoritative room code. */
-export async function createRoom(settings: Partial<RoomSettings>): Promise<CreateRoomResponse> {
+/** Create a room with the given (partial) settings and optional display name. */
+export async function createRoom(
+  settings: Partial<RoomSettings>,
+  name?: string,
+): Promise<CreateRoomResponse> {
+  const body: Record<string, unknown> = { ...settings };
+  if (name && name.trim().length > 0) body.name = name.trim();
   const res = await fetch(`${HTTP_BASE_URL}/api/rooms`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(settings),
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw await parseError(res);
   return (await res.json()) as CreateRoomResponse;
@@ -88,12 +107,16 @@ export async function getRoom(roomId: string): Promise<GetRoomResponse> {
   return (await res.json()) as GetRoomResponse;
 }
 
-/** List public, joinable rooms (best-effort; eventually consistent). */
-export async function listPublicRooms(): Promise<RoomMeta[]> {
-  const res = await fetch(`${HTTP_BASE_URL}/api/rooms`);
+/** List public, joinable rooms with optional filtering and pagination. */
+export async function listPublicRooms(options: ListPublicRoomsOptions = {}): Promise<ListPublicRoomsResponse> {
+  const params = new URLSearchParams();
+  if (options.status) params.set("status", options.status);
+  if (options.page != null) params.set("page", String(options.page));
+  if (options.limit != null) params.set("limit", String(options.limit));
+  const query = params.toString();
+  const res = await fetch(`${HTTP_BASE_URL}/api/rooms${query ? `?${query}` : ""}`);
   if (!res.ok) throw await parseError(res);
-  const body = (await res.json()) as { rooms: RoomMeta[] };
-  return body.rooms ?? [];
+  return (await res.json()) as ListPublicRoomsResponse;
 }
 
 /** Available word packs (bundled + D1 custom). */

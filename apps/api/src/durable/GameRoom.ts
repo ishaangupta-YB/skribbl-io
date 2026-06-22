@@ -789,15 +789,17 @@ export class GameRoom extends DurableObject<Env> {
     const r = this.room;
     if (!r.roomId) return;
     try {
+      const hostNickname = r.hostId ? (r.players[r.hostId]?.nickname ?? null) : null;
       await upsertLobbyRoom(this.env.DB, {
         roomId: r.roomId,
+        name: hostNickname ? `${hostNickname}'s room` : "Open room",
         isPublic: r.isPublic,
         phase: r.phase,
         playerCount: r.order.length,
         maxPlayers: r.settings.maxPlayers,
         maxRounds: r.settings.maxRounds,
         roundDurationSec: r.settings.roundDurationSec,
-        hostNickname: r.hostId ? (r.players[r.hostId]?.nickname ?? null) : null,
+        hostNickname,
       });
       await invalidatePublicLobby(this.env);
     } catch {

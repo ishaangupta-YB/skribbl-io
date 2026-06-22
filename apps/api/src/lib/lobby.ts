@@ -12,6 +12,7 @@ export function roomInitKey(roomId: string): string {
 /** Public-facing summary of a room for the lobby browser / existence checks. */
 export interface RoomSummary {
   roomId: string;
+  name: string;
   isPublic: boolean;
   phase: string;
   playerCount: number;
@@ -22,6 +23,7 @@ export interface RoomSummary {
 }
 
 export interface RoomInit {
+  name?: string;
   settings: RoomSettings;
   isPublic: boolean;
 }
@@ -70,6 +72,7 @@ export async function getRoomMeta(env: Env, roomId: string): Promise<RoomSummary
       const init = JSON.parse(raw) as RoomInit;
       return {
         roomId,
+        name: init.name ?? "Open room",
         isPublic: init.isPublic,
         phase: "lobby",
         playerCount: 0,
@@ -86,9 +89,10 @@ export async function getRoomMeta(env: Env, roomId: string): Promise<RoomSummary
 }
 
 /** Seed an empty registry row at room-creation time (before anyone connects). */
-export async function seedLobbyRoom(env: Env, roomId: string, settings: RoomSettings): Promise<void> {
+export async function seedLobbyRoom(env: Env, roomId: string, settings: RoomSettings, name?: string): Promise<void> {
   const row: LobbyUpsert = {
     roomId,
+    name: name ?? "Open room",
     isPublic: settings.isPublic,
     phase: "lobby",
     playerCount: 0,
@@ -107,6 +111,7 @@ export async function seedLobbyRoom(env: Env, roomId: string, settings: RoomSett
 
 function toSummary(row: {
   roomId: string;
+  name: string;
   isPublic: boolean;
   phase: string;
   playerCount: number;
@@ -117,6 +122,7 @@ function toSummary(row: {
 }): RoomSummary {
   return {
     roomId: row.roomId,
+    name: row.name || `${row.hostNickname ?? "Someone"}'s room`,
     isPublic: row.isPublic,
     phase: row.phase,
     playerCount: row.playerCount,

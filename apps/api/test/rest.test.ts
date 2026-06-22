@@ -65,6 +65,27 @@ describe("REST API", () => {
     const a = await join(roomId, "Alice");
 
     // The DO updates the registry asynchronously — poll briefly.
+    let match: { roomId: string; name: string } | undefined;
+    for (let attempt = 0; attempt < 20 && !match; attempt += 1) {
+      const resp = await SELF.fetch(`${BASE}/api/rooms`);
+      const { rooms } = (await resp.json()) as { rooms: { roomId: string; name: string }[] };
+      match = rooms.find((r) => r.roomId === roomId);
+      if (!match) await new Promise((r) => setTimeout(r, 25));
+    }
+    expect(match).toBeDefined();
+    expect(match!.name).toBe("Alice's room");
+    a.client.close();
+  });
+
+  it("private rooms never appear in the public lobby", async () => {
+    const create = await SELF.fetch(`${BASE}/api/rooms`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ isPublic: false }),
+    });
+    const { roomId } = (await create.json()) as { roomId: string };
+    const a = await join(roomId, "Bob");
+
     let listed = false;
     for (let attempt = 0; attempt < 20 && !listed; attempt += 1) {
       const resp = await SELF.fetch(`${BASE}/api/rooms`);
@@ -72,8 +93,55 @@ describe("REST API", () => {
       listed = rooms.some((r) => r.roomId === roomId);
       if (!listed) await new Promise((r) => setTimeout(r, 25));
     }
-    expect(listed).toBe(true);
+    expect(listed).toBe(false);
     a.client.close();
+  });
+
+  it("paginates the public lobby and excludes full rooms", async () => {
+    const create = await SELF.fetch(`${BASE}/api/rooms`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ isPublic: true, maxPlayers: 2 }),
+    });
+    const { roomId } = (await create.json()) as { roomId: string };
+
+    const a = await join(roomId, "One");
+    let listed: { roomId: string } | undefined;
+    for (let attempt = 0; attempt < 20 && !listed; attempt += 1) {
+      const resp = await SELF.fetch(`${BASE}/api/rooms?limit=1`);
+      const body = (await resp.json()) as { rooms: { roomId: string }[]; total: number };
+      listed = body.rooms.find((r) => r.roomId === roomId);
+      if (!listed) await new Promise((r) => setTimeout(r, 25));
+    }
+    expect(listed).toBeDefined();
+
+    const b = await join(roomId, "Two");
+    // Once the room is full, the joinable/default listing should exclude it.
+    let fullListed = false;
+    for (let attempt = 0; attempt < 20 && !fullListed; attempt += 1) {
+      const resp = await SELF.fetch(`${BASE}/api/rooms`);
+      const { rooms } = (await resp.json()) as { rooms: { roomId: string }[] };
+      fullListed = rooms.some((r) => r.roomId === roomId);
+      if (fullListed) await new Promise((r) => setTimeout(r, 25));
+    }
+    expect(fullListed).toBe(false);
+
+    a.client.close();
+    b.client.close();
+  });
+
+  it("persists the custom room name on creation before anyone joins", async () => {
+    const resp = await SELF.fetch(`${BASE}/api/rooms`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ isPublic: true, name: "My Cool Room" }),
+    });
+    const { roomId } = (await resp.json()) as { roomId: string };
+
+    const meta = await SELF.fetch(`${BASE}/api/rooms/${roomId}`);
+    const json = (await meta.json()) as { exists: boolean; room?: { name: string } };
+    expect(json.exists).toBe(true);
+    expect(json.room?.name).toBe("My Cool Room");
   });
 
   it("rejects WebSocket route without an Upgrade header", async () => {

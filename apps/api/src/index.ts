@@ -29,7 +29,7 @@ app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"] }));
 
 app.get("/health", (c) => c.json({ ok: true }));
 
-/** Create a room. Body: partial RoomSettings. Returns { roomId }. */
+/** Create a room. Body: partial RoomSettings + optional name. Returns { roomId }. */
 app.post("/api/rooms", async (c) => {
   const ip = c.req.header("CF-Connecting-IP") ?? c.req.header("x-forwarded-for") ?? "anonymous";
   const allowed = await checkRateLimit(c.env.KV, ip, { limit: 15, windowSec: 60, prefix: "rl:create" });
@@ -49,22 +49,36 @@ app.post("/api/rooms", async (c) => {
   const settings: RoomSettings = { ...defaultRoomSettings, ...parsed.data };
   if (!settings.wordPackIds || settings.wordPackIds.length === 0) settings.wordPackIds = ["default"];
 
+  const roomName = extractRoomName(body);
   const roomId = await generateUniqueRoomId(c.env);
-  const init: RoomInit = { settings, isPublic: settings.isPublic };
+  const init: RoomInit = { name: roomName, settings, isPublic: settings.isPublic };
   try {
     await c.env.KV.put(roomInitKey(roomId), JSON.stringify(init), { expirationTtl: 60 * 60 * 6 });
   } catch {
     /* DO falls back to defaults if init is missing */
   }
-  await seedLobbyRoom(c.env, roomId, settings);
+  await seedLobbyRoom(c.env, roomId, settings, roomName);
 
   return c.json({ roomId, settings });
 });
 
-/** Browse public, joinable rooms. */
+/** Browse public, joinable rooms. Query: ?status=open|joinable&page=1&limit=20 */
 app.get("/api/rooms", async (c) => {
-  const rooms = await readPublicLobby(c.env);
-  return c.json({ rooms });
+  const query = c.req.query();
+  const status = query.status ?? "joinable";
+  const page = parseInt(query.page ?? "1", 10);
+  const limit = Math.min(parseInt(query.limit ?? "20", 10), 50);
+  const joinable = status !== "all";
+
+  const all = await readPublicLobby(c.env);
+  // The cached list is already public+lobby+non-empty. Re-apply joinable filter here so
+  // full rooms are excluded when status=joinable/open, and included for status=all.
+  const filtered = joinable ? all.filter((r) => r.playerCount < r.maxPlayers) : all;
+  const total = filtered.length;
+  const offset = Math.max(0, (page - 1) * limit);
+  const rooms = filtered.slice(offset, offset + limit);
+
+  return c.json({ rooms, page, limit, total });
 });
 
 /** Existence + metadata for a single room. */
@@ -97,6 +111,14 @@ app.get("/api/rooms/:id/ws", async (c) => {
 });
 
 app.notFound((c) => c.json({ error: "ROOM_NOT_FOUND", message: "not found" }, 404));
+
+function extractRoomName(body: unknown): string | undefined {
+  if (!body || typeof body !== "object") return undefined;
+  const maybe = (body as { name?: unknown }).name;
+  if (typeof maybe !== "string") return undefined;
+  const trimmed = maybe.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
 
 async function generateUniqueRoomId(env: Env): Promise<string> {
   for (let attempt = 0; attempt < 5; attempt += 1) {

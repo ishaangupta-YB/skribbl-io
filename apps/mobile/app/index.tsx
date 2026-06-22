@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { router } from "expo-router";
-import { LogIn, Plus, Settings as SettingsIcon } from "lucide-react-native";
+import { Globe, LogIn, Plus, Settings as SettingsIcon } from "lucide-react-native";
 import { useTheme } from "@/theme";
 import { useIdentity } from "@/lib/store";
 import {
@@ -67,6 +67,13 @@ export default function HomeScreen() {
             label="Join with a code"
             leftIcon={<LogIn size={20} color={colors.secondaryForeground} />}
             onPress={() => router.push("/join")}
+          />
+          <Button
+            size="lg"
+            variant="outline"
+            label="Browse public rooms"
+            leftIcon={<Globe size={20} color={colors.foreground} />}
+            onPress={() => router.push("/lobby")}
           />
         </View>
       </View>

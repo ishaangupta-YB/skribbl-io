@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, lt } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { lobbyRooms, wordPacks, type LobbyRoomRow } from "./schema";
 
@@ -10,6 +10,7 @@ export function getDb(d1: D1Database): Database {
 
 export interface LobbyUpsert {
   roomId: string;
+  name: string;
   isPublic: boolean;
   phase: string;
   playerCount: number;
@@ -28,6 +29,7 @@ export async function upsertLobbyRoom(d1: D1Database, row: LobbyUpsert): Promise
     .onConflictDoUpdate({
       target: lobbyRooms.roomId,
       set: {
+        name: row.name,
         isPublic: row.isPublic,
         phase: row.phase,
         playerCount: row.playerCount,
@@ -49,14 +51,36 @@ export async function getLobbyRoom(d1: D1Database, roomId: string): Promise<Lobb
   return rows[0] ?? null;
 }
 
-/** Public, joinable rooms (in the lobby phase with at least one player). */
-export async function listPublicRooms(d1: D1Database, limit = 50): Promise<LobbyRoomRow[]> {
+export interface ListPublicRoomsOptions {
+  /** If true (default), exclude rooms that are already full. */
+  joinable?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+const DEFAULT_LIST_LIMIT = 50;
+
+/** Public rooms in the lobby phase. Defaults to joinable rooms (not full). */
+export async function listPublicRooms(
+  d1: D1Database,
+  options: ListPublicRoomsOptions = {},
+): Promise<LobbyRoomRow[]> {
+  const { joinable = true, limit = DEFAULT_LIST_LIMIT, offset = 0 } = options;
+  const conditions = [
+    eq(lobbyRooms.isPublic, true),
+    eq(lobbyRooms.phase, "lobby"),
+    gt(lobbyRooms.playerCount, 0),
+  ];
+  if (joinable) {
+    conditions.push(lt(lobbyRooms.playerCount, lobbyRooms.maxPlayers));
+  }
   return getDb(d1)
     .select()
     .from(lobbyRooms)
-    .where(and(eq(lobbyRooms.isPublic, true), eq(lobbyRooms.phase, "lobby"), gt(lobbyRooms.playerCount, 0)))
+    .where(and(...conditions))
     .orderBy(desc(lobbyRooms.updatedAt))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
 }
 
 export async function listWordPackRows(d1: D1Database): Promise<{ id: string; name: string; description: string; words: string[] }[]> {

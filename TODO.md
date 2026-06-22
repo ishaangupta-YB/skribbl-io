@@ -75,7 +75,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 3 — Enhancements
 
-- [ ] Public lobby browser (D1 + KV)
+- [x] Public lobby browser (D1 + KV) — registry now has `name`, KV-cached list, paginated/joinable `GET /api/rooms`, and a Lobby Browser screen with live refresh / pull-to-refresh / Join. Verified with API tests + mobile typecheck/lint/react-doctor.
 - [ ] Custom word packs (host-created, D1)
 - [ ] Sounds + haptics; theming; transitions + confetti
 - [ ] Hints polish; close-guess UX
