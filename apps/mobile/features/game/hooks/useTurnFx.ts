@@ -1,12 +1,15 @@
 import { useEffect, useRef } from "react";
 import type { GamePhase } from "@skribbl/shared";
 import { useHaptics, useSound } from "../integration/GameDepsContext";
+import { selectIsDrawer } from "../state/selectors";
 import type { RoomSnapshot } from "../state/types";
 
 interface FxMemory {
+  status: RoomSnapshot["status"];
   phase: GamePhase | null;
   youGuessed: boolean;
   guessedCount: number;
+  playerCount: number;
   revealWord: string | null;
   gameOver: boolean;
   feedbackAt: number;
@@ -16,17 +19,19 @@ interface FxMemory {
 
 /**
  * Fires tasteful haptics + sound effects on meaningful game transitions
- * (turn start, guesses, the final countdown ticks, reveal, win, reactions).
- * All effects route through the injected APIs, so they no-op until Agent B
- * wires expo-haptics / expo-av.
+ * (connecting, players joining, your turn, guesses, final countdown ticks,
+ * time-up, reveal, win, reactions). All effects route through the injected APIs
+ * and respect the global sound/haptics toggles in Settings.
  */
 export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
   const haptics = useHaptics();
   const sound = useSound();
   const mem = useRef<FxMemory>({
+    status: "idle",
     phase: null,
     youGuessed: false,
     guessedCount: 0,
+    playerCount: 0,
     revealWord: null,
     gameOver: false,
     feedbackAt: 0,
@@ -37,10 +42,24 @@ export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
   useEffect(() => {
     const prev = mem.current;
     const phase = snapshot.room?.phase ?? null;
+    const isDrawer = selectIsDrawer(snapshot);
+    const playerCount = snapshot.room?.players.length ?? 0;
+
+    // ---- connected / someone joined ----
+    if (snapshot.status === "open" && prev.status !== "open") {
+      sound.play("join");
+    }
+    if (playerCount > prev.playerCount && prev.playerCount > 0) {
+      sound.play("join");
+      haptics.light();
+    }
 
     // ---- phase transitions ----
     if (phase !== prev.phase) {
-      if (phase === "drawing") {
+      if (phase === "choosing" && isDrawer) {
+        sound.play("turnStart");
+        haptics.medium();
+      } else if (phase === "drawing") {
         sound.play("turnStart");
         haptics.medium();
       } else if (phase === "reveal") {
@@ -82,9 +101,11 @@ export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
     }
 
     mem.current = {
+      status: snapshot.status,
       phase,
       youGuessed: snapshot.youGuessedCorrect,
       guessedCount: snapshot.guessedIds.length,
+      playerCount,
       revealWord: snapshot.reveal?.word ?? null,
       gameOver: Boolean(snapshot.gameOver),
       feedbackAt: snapshot.guessFeedback?.at ?? prev.feedbackAt,
@@ -93,7 +114,7 @@ export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
     };
   }, [snapshot, haptics, sound]);
 
-  // ---- final-countdown ticks (last 5s of the drawing phase) ----
+  // ---- final-countdown ticks + time-up (last 5s of the drawing phase) ----
   useEffect(() => {
     const phase = snapshot.room?.phase;
     if (phase !== "drawing") {
@@ -104,6 +125,10 @@ export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
       mem.current.tickSecond = secondsLeft;
       sound.play("tick");
       haptics.selection();
+    } else if (secondsLeft === 0 && mem.current.tickSecond === 1) {
+      mem.current.tickSecond = 0;
+      sound.play("timeUp");
+      haptics.warning();
     }
   }, [secondsLeft, snapshot, sound, haptics]);
 }

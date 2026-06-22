@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { ScrollView, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { useTheme } from "../integration/GameDepsContext";
 import { selectScoreboard } from "../state/selectors";
 import type { GameTheme } from "../integration/contracts";
@@ -55,19 +56,53 @@ function badges(row: ScoreRow): string {
 }
 
 function ListRow({ row, theme }: { row: ScoreRow; theme: GameTheme }): React.JSX.Element {
+  const rowScale = useSharedValue(1);
+  const pointsScale = useSharedValue(1);
+  const pointsOpacity = useSharedValue(1);
+  const prevGuessed = useRef(row.hasGuessed);
+  const prevPoints = useRef(row.roundPoints);
+
+  const rowStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: rowScale.value }],
+  }));
+  const pointsStyle = useAnimatedStyle(() => ({
+    opacity: pointsOpacity.value,
+    transform: [{ scale: pointsScale.value }],
+  }));
+
+  useEffect(() => {
+    if (row.hasGuessed && !prevGuessed.current) {
+      rowScale.value = withSequence(withTiming(1.04, { duration: 120 }), withSpring(1, { damping: 14 }));
+    }
+    prevGuessed.current = row.hasGuessed;
+  }, [row.hasGuessed, rowScale]);
+
+  useEffect(() => {
+    if (row.roundPoints > 0 && prevPoints.current === 0) {
+      pointsScale.value = 1.5;
+      pointsOpacity.value = 0;
+      pointsScale.value = withSpring(1, { damping: 14 });
+      pointsOpacity.value = withTiming(1, { duration: 250 });
+    }
+    prevPoints.current = row.roundPoints;
+  }, [row.roundPoints, pointsOpacity, pointsScale]);
+
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: theme.spacing(3),
-        paddingVertical: theme.spacing(2),
-        paddingHorizontal: theme.spacing(3),
-        borderRadius: theme.radius.md,
-        backgroundColor: row.isYou ? theme.colors.surfaceAlt : "transparent",
-        borderWidth: row.isYou ? 1 : 0,
-        borderColor: theme.colors.primary,
-      }}
+    <Animated.View
+      style={[
+        {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing(3),
+          paddingVertical: theme.spacing(2),
+          paddingHorizontal: theme.spacing(3),
+          borderRadius: theme.radius.md,
+          backgroundColor: row.isYou ? theme.colors.surfaceAlt : "transparent",
+          borderWidth: row.isYou ? 1 : 0,
+          borderColor: theme.colors.primary,
+        },
+        rowStyle,
+      ]}
     >
       <Txt variant="caption" color={theme.colors.textMuted} style={{ width: 18 }}>
         {row.rank}
@@ -89,14 +124,16 @@ function ListRow({ row, theme }: { row: ScoreRow; theme: GameTheme }): React.JSX
         </Row>
       </View>
       {row.roundPoints > 0 ? (
-        <Txt variant="caption" color={theme.colors.success} weight="800">
-          +{row.roundPoints}
-        </Txt>
+        <Animated.View style={pointsStyle}>
+          <Txt variant="caption" color={theme.colors.success} weight="800">
+            +{row.roundPoints}
+          </Txt>
+        </Animated.View>
       ) : null}
       <Txt variant="subtitle" weight="800" color={theme.colors.text} style={{ minWidth: 44, textAlign: "right" }}>
         {row.score}
       </Txt>
-    </View>
+    </Animated.View>
   );
 }
 
