@@ -17,8 +17,6 @@ import {
   applyServerMessage,
   createInitialSnapshot,
   GameDepsProvider,
-  noopHaptics,
-  noopSound,
 } from "@/features/game";
 import type {
   DrawCanvasProps,
@@ -29,8 +27,10 @@ import type {
   RoomSnapshot,
   UseRoomConnection,
 } from "@/features/game";
+import { useGameHaptics } from "@/lib/haptics";
 import { RoomConnection, useRoomConnection as useClientConnection } from "@/lib/realtime";
 import { useIdentity } from "@/lib/store";
+import { useGameSound } from "@/lib/sound";
 import { useTheme } from "@/theme";
 
 /* ------------------------------------------------------------------ *
@@ -76,7 +76,7 @@ function useGameTheme(): GameTheme {
         border: colors.border,
         text: colors.foreground,
         textMuted: colors.mutedForeground,
-        textInverse: colors.primaryForeground,
+        textInverse: "#FFFFFF",
         primary: colors.primary,
         primaryText: colors.primaryForeground,
         accent: colors.accent,
@@ -157,6 +157,8 @@ function RealDrawCanvas({ editable, style }: DrawCanvasProps): React.JSX.Element
  * ------------------------------------------------------------------ */
 export function useRealGameDeps(options: { onLeave?: () => void } = {}): GameDeps {
   const theme = useGameTheme();
+  const haptics = useGameHaptics();
+  const sound = useGameSound();
   const nickname = useIdentity((s) => s.nickname);
   const avatar = useIdentity((s) => s.avatar);
   const { onLeave } = options;
@@ -172,11 +174,11 @@ export function useRealGameDeps(options: { onLeave?: () => void } = {}): GameDep
       identity,
       useRoomConnection: useRealRoomConnection,
       DrawCanvas: RealDrawCanvas,
-      haptics: noopHaptics,
-      sound: noopSound,
+      haptics,
+      sound,
       onLeave,
     }),
-    [theme, identity, onLeave],
+    [theme, identity, haptics, sound, onLeave],
   );
 }
 

@@ -77,7 +77,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 - [ ] Public lobby browser (D1 + KV)
 - [ ] Custom word packs (host-created, D1)
-- [ ] Sounds + haptics; theming; transitions + confetti
+- [x] Sounds + haptics; theming; transitions + confetti — Polish Agent: added generated SFX, `useGameSound`/`useGameHaptics`, theme system override, `PhaseAnnounce`, score-tick + guess-pulse animations, win confetti intact, quick emoji picker
 - [ ] Hints polish; close-guess UX
 
 ## Phase 4 — Hardening & deploy

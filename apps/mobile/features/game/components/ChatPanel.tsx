@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, TextInput, View, type NativeSyntheticEvent, type TextInputSubmitEditingEventData } from "react-native";
+import Animated, { ZoomIn } from "react-native-reanimated";
 import { GAME, type ChatKind, type ChatMessage } from "@skribbl/shared";
 import { useTheme } from "../integration/GameDepsContext";
 import { selectGuessLocked, selectIsDrawer, selectPhase } from "../state/selectors";
@@ -135,22 +136,7 @@ function ChatRow({
   }
 
   if (message.kind === "correct" || message.kind === "close") {
-    return (
-      <View
-        style={{
-          alignSelf: "center",
-          backgroundColor: accent,
-          borderRadius: theme.radius.pill,
-          paddingHorizontal: theme.spacing(3),
-          paddingVertical: theme.spacing(1),
-        }}
-      >
-        <Txt variant="caption" color="#0F1226" weight="800">
-          {message.kind === "correct" ? "✅ " : "✨ "}
-          {message.text}
-        </Txt>
-      </View>
-    );
+    return <PillChatRow message={message} theme={theme} accent={accent} />;
   }
 
   // Normal chat line.
@@ -163,6 +149,34 @@ function ChatRow({
         {message.text}
       </Txt>
     </View>
+  );
+}
+
+function PillChatRow({
+  message,
+  theme,
+  accent,
+}: {
+  message: ChatMessage;
+  theme: GameTheme;
+  accent: string;
+}): React.JSX.Element {
+  return (
+    <Animated.View
+      entering={ZoomIn.springify().damping(14)}
+      style={{
+        alignSelf: "center",
+        backgroundColor: accent,
+        borderRadius: theme.radius.pill,
+        paddingHorizontal: theme.spacing(3),
+        paddingVertical: theme.spacing(1),
+      }}
+    >
+      <Txt variant="caption" color="#0F1226" weight="800">
+        {message.kind === "correct" ? "✅ " : "✨ "}
+        {message.text}
+      </Txt>
+    </Animated.View>
   );
 }
 

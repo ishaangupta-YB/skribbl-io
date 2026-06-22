@@ -1,8 +1,9 @@
 import { useCallback } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { CanvasKitProvider } from "@/features/canvas";
 import { GameScreen } from "@/features/game";
+import { LoadingScreen } from "@/components/ui";
 import { useTheme } from "@/theme";
 import { GameDepsProvider, useRealGameDeps } from "@/lib/gameDeps";
 
@@ -23,15 +24,8 @@ export default function RoomScreen() {
   return (
     <CanvasKitProvider
       fallback={
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: colors.background,
-          }}
-        >
-          <ActivityIndicator color={colors.primary} />
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <LoadingScreen message="Loading canvas…" />
         </View>
       }
     >

@@ -122,6 +122,7 @@ export type GameSoundName =
   | "guessCorrect"
   | "youGuessed"
   | "tick"
+  | "timeUp"
   | "reveal"
   | "win"
   | "react";
