@@ -75,8 +75,13 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 3 — Enhancements
 
+<<<<<<< HEAD
 - [x] Public lobby browser (D1 + KV) — registry now has `name`, KV-cached list, paginated/joinable `GET /api/rooms`, and a Lobby Browser screen with live refresh / pull-to-refresh / Join. Verified with API tests + mobile typecheck/lint/react-doctor.
 - [ ] Custom word packs (host-created, D1)
+=======
+- [ ] Public lobby browser (D1 + KV)
+- [x] Custom word packs (host-created, D1) — normalized `word_packs` + `words` tables; `POST /api/word-packs` + `GET /api/word-packs/:id`; pack picker + custom-word textarea + persistence in Create Room; default pack remains fallback.
+>>>>>>> agent/word-packs
 - [ ] Sounds + haptics; theming; transitions + confetti
 - [ ] Hints polish; close-guess UX
 

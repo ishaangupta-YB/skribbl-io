@@ -1,22 +1,37 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /**
- * Word packs available to rooms. The three bundled packs from `@skribbl/shared`
- * are seeded here (is_custom = 0); host-created packs are inserted with
- * is_custom = 1 and merged into a room's word pool at game start.
+ * Host-created and bundled word packs. Bundled packs from `@skribbl/shared` are
+ * seeded with `isPublic = false` and `createdBy = null`; custom packs created
+ * via `POST /api/word-packs` are public and tagged with the creator's nickname.
  */
 export const wordPacks = sqliteTable("word_packs", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
-  /** JSON-encoded string[] of words. */
-  words: text("words", { mode: "json" }).$type<string[]>().notNull(),
-  isCustom: integer("is_custom", { mode: "boolean" }).notNull().default(false),
+  isPublic: integer("is_public", { mode: "boolean" }).notNull().default(true),
+  createdBy: text("created_by"),
   createdAt: integer("created_at")
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
 });
+
+/**
+ * Normalized words table. Each row is one word belonging to a pack. The
+ * composite primary key prevents duplicate words within a pack.
+ */
+export const words = sqliteTable(
+  "words",
+  {
+    packId: text("pack_id").notNull(),
+    word: text("word").notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.packId, table.word] }),
+    packIdx: index("idx_words_pack_id").on(table.packId),
+  }),
+);
 
 /**
  * Lightweight registry of live rooms, kept up to date by each GameRoom DO.
@@ -47,4 +62,5 @@ export const lobbyRooms = sqliteTable(
 );
 
 export type WordPackRow = typeof wordPacks.$inferSelect;
+export type WordRow = typeof words.$inferSelect;
 export type LobbyRoomRow = typeof lobbyRooms.$inferSelect;

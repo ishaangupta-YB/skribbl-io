@@ -9,6 +9,7 @@ export * from "./modal";
 export * from "./screen";
 export * from "./spinner";
 export * from "./stepper";
+export * from "./textarea";
 export * from "./switch-row";
 export * from "./text";
 export * from "./toast";

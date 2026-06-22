@@ -12,7 +12,7 @@ import type { Env } from "./env";
 import { checkRateLimit } from "./lib/rate-limit";
 import { getRoomMeta, readPublicLobby, roomInitKey, seedLobbyRoom, type RoomInit } from "./lib/lobby";
 import { getLobbyRoom } from "./db/queries";
-import { listAllWordPacks } from "./lib/words";
+import { createWordPack, getWordPack, listAllWordPacks, validateWordPack, MAX_PACK_DESCRIPTION_LEN, MAX_PACK_NAME_LEN } from "./lib/words";
 
 export { GameRoom } from "./durable/GameRoom";
 
@@ -93,6 +93,61 @@ app.get("/api/rooms/:id", async (c) => {
 app.get("/api/words", async (c) => {
   const packs = await listAllWordPacks(c.env);
   return c.json({ packs });
+});
+
+/** Create a custom word pack. */
+app.post("/api/word-packs", async (c) => {
+  const ip = c.req.header("CF-Connecting-IP") ?? c.req.header("x-forwarded-for") ?? "anonymous";
+  const allowed = await checkRateLimit(c.env.KV, ip, { limit: 10, windowSec: 60, prefix: "rl:pack" });
+  if (!allowed) return c.json({ error: "RATE_LIMITED", message: "too many packs created — slow down" }, 429);
+
+  let body: Record<string, unknown> = {};
+  try {
+    body = (await c.req.json()) as Record<string, unknown>;
+  } catch {
+    body = {};
+  }
+
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  const description = typeof body.description === "string" ? body.description.trim() : "";
+  const isPublic = body.isPublic !== false;
+  const createdBy = typeof body.createdBy === "string" ? body.createdBy.trim() || null : null;
+
+  const validationErrors: string[] = [];
+  if (name.length === 0) validationErrors.push("Pack name is required.");
+  if (name.length > MAX_PACK_NAME_LEN) validationErrors.push(`Pack name must be ${MAX_PACK_NAME_LEN} characters or fewer.`);
+  if (description.length > MAX_PACK_DESCRIPTION_LEN) {
+    validationErrors.push(`Description must be ${MAX_PACK_DESCRIPTION_LEN} characters or fewer.`);
+  }
+
+  const wordsValidation = validateWordPack(body.words, name);
+  if (!wordsValidation.ok) validationErrors.push(...wordsValidation.errors);
+
+  if (validationErrors.length > 0 || !wordsValidation.ok) {
+    return c.json({ error: "INVALID_MESSAGE", message: validationErrors.join(" ") }, 400);
+  }
+
+  try {
+    const pack = await createWordPack(c.env, {
+      name,
+      description,
+      isPublic,
+      createdBy,
+      words: wordsValidation.words,
+    });
+    return c.json({ pack }, 201);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "could not create word pack";
+    return c.json({ error: "INTERNAL_ERROR", message }, 500);
+  }
+});
+
+/** Fetch a specific word pack (bundled or D1). */
+app.get("/api/word-packs/:id", async (c) => {
+  const id = c.req.param("id");
+  const pack = await getWordPack(c.env, id);
+  if (!pack) return c.json({ error: "WORD_PACK_NOT_FOUND" }, 404);
+  return c.json({ pack });
 });
 
 /** WebSocket upgrade → the room's Durable Object. */
