@@ -1,6 +1,6 @@
 # Handoff: Contract (Phase 0 → all agents)
 
-**Status: FROZEN ✅** — `@skribbl/shared` is published in-workspace and ready to build against.
+**Status: FROZEN ✅ — tagged `v1` (Phase 2 integration complete).** `@skribbl/shared` is published in-workspace and ready to build against. The contract was verified end-to-end against the real Cloudflare Worker + Durable Object and the Expo client in Phase 2; no drift was found and no changes were required.
 
 ## What you get
 

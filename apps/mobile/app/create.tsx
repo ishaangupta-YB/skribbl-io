@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { Sparkles } from "lucide-react-native";
 import { GAME, listWordPacks, nicknameSchema } from "@skribbl/shared";
 import { useTheme } from "@/theme";
-import { suggestRoomId } from "@/lib/config";
+import { createRoom, ApiError } from "@/lib/api";
 import { useIdentity, useRoomDraft } from "@/lib/store";
 import {
   AppHeader,
@@ -34,6 +34,7 @@ export default function CreateScreen() {
   const settings = useRoomDraft((s) => s.settings);
   const setSettings = useRoomDraft((s) => s.setSettings);
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const togglePack = (id: string) => {
     const has = settings.wordPackIds.includes(id);
@@ -44,13 +45,22 @@ export default function CreateScreen() {
     setSettings({ wordPackIds: next });
   };
 
-  const onCreate = () => {
+  const onCreate = async () => {
     if (!nicknameSchema.safeParse(nickname).success) {
       toast.error("Pick a nickname", "1–16 characters.");
       return;
     }
-    const id = suggestRoomId();
-    router.push({ pathname: "/lobby/[id]", params: { id, host: "1" } });
+    if (creating) return;
+    setCreating(true);
+    try {
+      const { roomId } = await createRoom(settings);
+      router.replace({ pathname: "/room/[id]", params: { id: roomId, host: "1" } });
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Could not create the room. Is the backend running?";
+      toast.error("Create failed", msg);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -133,7 +143,8 @@ export default function CreateScreen() {
 
         <Button
           size="lg"
-          label="Create room"
+          label={creating ? "Creating…" : "Create room"}
+          disabled={creating}
           leftIcon={<Sparkles size={20} color={colors.primaryForeground} />}
           onPress={onCreate}
         />

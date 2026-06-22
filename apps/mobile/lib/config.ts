@@ -1,11 +1,19 @@
 import { generateRoomId } from "@skribbl/shared";
 
 /**
- * Backend base URL. During Phase 1 this points at the local protocol mock
- * (`pnpm mock`); in Phase 2 it switches to `wrangler dev` / the deployed Worker.
- * The WS client (Agent C) builds the room socket URL from this.
+ * Backend base URL. During Phase 1 this pointed at the local protocol mock
+ * (`pnpm mock`); in Phase 2 it points at `wrangler dev` / the deployed Worker.
+ * The WS client (Agent C) builds the room socket URL from this, and the REST
+ * helpers in `lib/api.ts` derive the HTTP base from it.
  */
 export const WS_BASE_URL = process.env.EXPO_PUBLIC_WS_URL ?? "ws://localhost:8787";
+
+/**
+ * HTTP base URL derived from {@link WS_BASE_URL} by swapping the scheme. Used
+ * by the REST helpers (`POST /api/rooms`, `GET /api/rooms/:id`, …). Trailing
+ * slashes are trimmed so callers can safely append paths.
+ */
+export const HTTP_BASE_URL: string = WS_BASE_URL.replace(/^wss:/u, "https:").replace(/^ws:/u, "http:").replace(/\/+$/u, "");
 
 /** Full WebSocket URL for a room's Durable Object. */
 export function roomWsUrl(roomId: string): string {

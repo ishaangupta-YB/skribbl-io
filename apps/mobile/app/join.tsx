@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { LogIn } from "lucide-react-native";
 import { GAME, nicknameSchema, roomIdSchema } from "@skribbl/shared";
 import { useTheme } from "@/theme";
+import { getRoom, ApiError } from "@/lib/api";
 import { useIdentity } from "@/lib/store";
 import {
   AppHeader,
@@ -23,8 +24,10 @@ export default function JoinScreen() {
 
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | undefined>();
+  const [joining, setJoining] = useState(false);
 
-  const onJoin = () => {
+  const onJoin = async () => {
+    if (joining) return;
     if (!nicknameSchema.safeParse(nickname).success) {
       setError("Enter a nickname (1–16 characters).");
       return;
@@ -34,8 +37,21 @@ export default function JoinScreen() {
       setError(`Room codes are ${GAME.MIN_ROOM_ID_LEN}–${GAME.MAX_ROOM_ID_LEN} characters.`);
       return;
     }
+    setJoining(true);
     setError(undefined);
-    router.push({ pathname: "/lobby/[id]", params: { id: normalized } });
+    try {
+      const { exists } = await getRoom(normalized);
+      if (!exists) {
+        setError("No room with that code. Ask the host for the current code.");
+        setJoining(false);
+        return;
+      }
+      router.replace({ pathname: "/room/[id]", params: { id: normalized } });
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Could not reach the server. Is the backend running?";
+      setError(msg);
+      setJoining(false);
+    }
   };
 
   return (
@@ -73,7 +89,8 @@ export default function JoinScreen() {
 
         <Button
           size="lg"
-          label="Join room"
+          label={joining ? "Joining…" : "Join room"}
+          disabled={joining}
           leftIcon={<LogIn size={20} color={colors.primaryForeground} />}
           onPress={onJoin}
         />

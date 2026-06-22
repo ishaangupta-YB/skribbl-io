@@ -66,9 +66,12 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 2 — Integration (Orchestrator + A)
 
-- [ ] Point client `EXPO_PUBLIC_WS_URL` at `wrangler dev`
-- [ ] 3–4 client end-to-end playthrough
-- [ ] Resolve protocol mismatches; tag contract `v1`
+- [x] Point client `EXPO_PUBLIC_WS_URL` at `wrangler dev` — defaults to `ws://localhost:8787` (matches wrangler dev); `lib/config.ts` now also derives `HTTP_BASE_URL` for REST.
+- [x] Wire create flow to `POST /api/rooms` and join flow to `GET /api/rooms/:id` — `lib/api.ts` REST client; `app/create.tsx` + `app/join.tsx` navigate straight to `/room/[id]` (live `LobbyView`).
+- [x] 3–4 client end-to-end playthrough — 32/32 live checks pass vs real DO (create→join→start→choose→draw→guess→hint→reveal→rounds→leaderboard).
+- [x] Resolve protocol mismatches; tag contract `v1` — **none found**; `@skribbl/shared` bumped to `1.0.0`, `docs/handoffs/contract.md` tagged `v1`.
+- [x] Anti-cheat invariants verified live — word/choices only to drawer; non-host start → `NOT_ALLOWED`; non-drawer draw ignored; drawer typing the word suppressed; scores server-only.
+- [x] Edge cases verified live — host migration, drawer-leaves-mid-turn (abort+reveal+next), reconnect (fresh `room:state`), empty-room cleanup (reset to lobby).
 
 ## Phase 3 — Enhancements
 
