@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Animated, View } from "react-native";
 import { useTheme } from "../integration/GameDepsContext";
 import { selectDrawer, selectPhase } from "../state/selectors";
@@ -16,6 +16,10 @@ interface Announcement {
 /**
  * Briefly flashes a large "Round N" / "Your turn" banner when a new turn begins.
  * The overlay is pointer-events-none so it never blocks drawing or chat.
+ *
+ * The announcement content is computed during render (derived from the snapshot).
+ * Only the animation trigger lives in an effect; it never adjusts React state
+ * in response to prop changes, which keeps react-doctor happy.
  */
 export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.JSX.Element | null {
   const theme = useTheme();
@@ -24,30 +28,53 @@ export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.J
   const drawer = selectDrawer(snapshot);
   const youDraw = drawer?.id === snapshot.youId;
 
-  const [visible, setVisible] = useState(false);
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const fade = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-24)).current;
   const scale = useRef(new Animated.Value(0.9)).current;
   const lastKeyRef = useRef<string | null>(null);
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAnnouncementRef = useRef<Announcement | null>(null);
+
+  const announcement: Announcement | null =
+    phase === "choosing" || phase === "drawing"
+      ? {
+          title: round > 0 ? `Round ${round}` : "Draw!",
+          subtitle: youDraw
+            ? "Your turn to draw"
+            : drawer
+              ? `${drawer.nickname} is drawing`
+              : "Get ready…",
+          emoji: drawer?.avatar.emoji,
+        }
+      : null;
+
+  if (announcement) {
+    lastAnnouncementRef.current = announcement;
+  }
 
   useEffect(() => {
-    if (phase !== "choosing" && phase !== "drawing") {
-      setVisible(false);
-      return;
-    }
-    const key = `${round}-${phase}-${drawer?.id ?? ""}`;
+    const key = `${round}-${phase}-${drawer?.id ?? ""}-${youDraw}`;
     if (lastKeyRef.current === key) return;
     lastKeyRef.current = key;
 
-    const title = round > 0 ? `Round ${round}` : "Draw!";
-    const subtitle = youDraw
-      ? "Your turn to draw"
-      : drawer
-        ? `${drawer.nickname} is drawing`
-        : "Get ready…";
-    setAnnouncement({ title, subtitle, emoji: drawer?.avatar.emoji });
-    setVisible(true);
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+
+    const hide = () => {
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: -16, duration: 200, useNativeDriver: true }),
+      ]).start(() => {
+        lastAnnouncementRef.current = null;
+      });
+    };
+
+    if (!announcement) {
+      hide();
+      return;
+    }
 
     fade.setValue(0);
     translateY.setValue(-24);
@@ -58,17 +85,15 @@ export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.J
       Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 6 }),
     ]).start();
 
-    const hide = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: -16, duration: 200, useNativeDriver: true }),
-      ]).start(() => setVisible(false));
-    }, VISIBLE_MS);
+    hideTimerRef.current = setTimeout(hide, VISIBLE_MS);
 
-    return () => clearTimeout(hide);
-  }, [phase, round, drawer?.id, drawer?.nickname, youDraw, fade, translateY, scale]);
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, [announcement, phase, round, drawer?.id, youDraw, fade, translateY, scale]);
 
-  if (!visible || !announcement) return null;
+  const content = announcement ?? lastAnnouncementRef.current;
+  if (!content) return null;
 
   return (
     <View
@@ -96,14 +121,14 @@ export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.J
           minWidth: 220,
         }}
       >
-        {announcement.emoji ? (
-          <AvatarBubble emoji={announcement.emoji} color={drawer?.avatar.color ?? theme.colors.primary} size={48} />
+        {content.emoji ? (
+          <AvatarBubble emoji={content.emoji} color={drawer?.avatar.color ?? theme.colors.primary} size={48} />
         ) : null}
         <Txt variant="title" color={theme.colors.textInverse} weight="800" align="center">
-          {announcement.title}
+          {content.title}
         </Txt>
         <Txt variant="subtitle" color={theme.colors.textInverse} align="center">
-          {announcement.subtitle}
+          {content.subtitle}
         </Txt>
       </Animated.View>
     </View>

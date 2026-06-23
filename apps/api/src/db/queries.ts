@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { and, desc, eq, gt, inArray, lt } from "drizzle-orm";
-=======
-import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
->>>>>>> agent/word-packs
+import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { lobbyRooms, wordPacks, words, type LobbyRoomRow, type WordPackRow, type WordRow } from "./schema";
 
