@@ -1,5 +1,15 @@
-import React, { useEffect, useMemo, useRef } from "react";
-import { Animated, Easing, useWindowDimensions, View } from "react-native";
+import React, { useEffect, useMemo } from "react";
+import { useWindowDimensions, View } from "react-native";
+import Animated, {
+  Easing,
+  cancelAnimation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 
 const COLORS = ["#6C5CE7", "#00D2D3", "#FECA57", "#FF6B6B", "#2ECC71", "#54A0FF", "#EC4899"];
 
@@ -45,41 +55,36 @@ export function Confetti({ count = 56, active = true }: { count?: number; active
 }
 
 function ConfettiPiece({ piece, height }: { piece: Piece; height: number }): React.JSX.Element {
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress = useSharedValue(0);
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.delay(piece.delay),
-        Animated.timing(progress, {
-          toValue: 1,
-          duration: piece.duration,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-      ]),
+    progress.value = withDelay(
+      piece.delay,
+      withRepeat(withTiming(1, { duration: piece.duration, easing: Easing.linear }), -1, false),
     );
-    loop.start();
-    return () => loop.stop();
+    return () => cancelAnimation(progress);
   }, [progress, piece.delay, piece.duration]);
 
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-40, height + 40] });
-  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, piece.drift] });
-  const rotate = progress.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${piece.rotate + 360}deg`] });
-  const opacity = progress.interpolate({ inputRange: [0, 0.1, 0.85, 1], outputRange: [0, 1, 1, 0] });
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.1, 0.85, 1], [0, 1, 1, 0]),
+    transform: [
+      { translateY: interpolate(progress.value, [0, 1], [-40, height + 40]) },
+      { translateX: interpolate(progress.value, [0, 1], [0, piece.drift]) },
+      { rotate: `${interpolate(progress.value, [0, 1], [0, piece.rotate + 360])}deg` },
+    ],
+  }));
 
-  return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        left: piece.x,
-        width: piece.size,
-        height: piece.size * 1.4,
-        borderRadius: 2,
-        backgroundColor: piece.color,
-        opacity,
-        transform: [{ translateY }, { translateX }, { rotate }],
-      }}
-    />
+  const style = useMemo(
+    () => ({
+      position: "absolute" as const,
+      left: piece.x,
+      width: piece.size,
+      height: piece.size * 1.4,
+      borderRadius: 2,
+      backgroundColor: piece.color,
+    }),
+    [piece],
   );
+
+  return <Animated.View style={[style, animatedStyle]} />;
 }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 import { router } from "expo-router";
 import { Globe, Plus, RefreshCw, Users } from "lucide-react-native";
@@ -97,6 +97,18 @@ export default function LobbyBrowserScreen() {
     </View>
   );
 
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={isRefreshing}
+        onRefresh={refresh}
+        tintColor={colors.primary}
+        colors={[colors.primary]}
+      />
+    ),
+    [isRefreshing, refresh, colors.primary],
+  );
+
   const renderFooter = () => {
     if (isLoadingMore) {
       return <Spinner className="py-4" />;
@@ -139,14 +151,7 @@ export default function LobbyBrowserScreen() {
           ListHeaderComponent={renderHeader}
           ListFooterComponent={renderFooter}
           ListEmptyComponent={renderEmpty}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={refresh}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
-            />
-          }
+          refreshControl={refreshControl}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}

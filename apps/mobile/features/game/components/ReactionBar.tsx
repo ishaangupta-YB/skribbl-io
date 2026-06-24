@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useHaptics, useTheme } from "../integration/GameDepsContext";
 
-export const REACTION_EMOJIS = ["👍", "😂", "❤️", "😮", "🔥", "🎉"];
+const REACTION_EMOJIS = ["👍", "😂", "❤️", "😮", "🔥", "🎉"];
 const EXTRA_EMOJIS = ["👏", "🙌", "🤯", "😭", "😡", "👻", "🦄", "🌈", "✨", "💯", "🎯", "🍀"];
 
 /** A compact rail of emoji buttons that send `react` frames, plus an expandable quick picker. */

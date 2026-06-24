@@ -73,6 +73,20 @@ https://skribbl-api.<your-account>.workers.dev
 wss://skribbl-api.<your-account>.workers.dev
 ```
 
+### D1 migration rename note
+
+The Phase 4 deploy agent renamed `apps/api/migrations/0002_word_packs_split.sql` to `0003_word_packs_split.sql` and inserted `0002_add_room_name.sql`. On a **fresh** D1 database the migrations apply cleanly (`0001` → `0002` → `0003`).
+
+If you have an environment that already applied the old `0002_word_packs_split.sql` (Phase 3), wrangler will try to re-apply the new `0003_word_packs_split.sql` and fail because the `word_packs`/`words` tables already exist. Before the first deploy to that environment, reconcile the remote `d1_migrations` table by either:
+
+1. Marking `0003_word_packs_split.sql` as already applied in the remote D1:
+   ```sql
+   INSERT INTO d1_migrations (name) VALUES ('0003_word_packs_split.sql');
+   ```
+2. Or starting from a fresh D1 database and re-applying all migrations.
+
+Local development can recover by wiping `apps/api/.wrangler` and re-running `npx wrangler d1 migrations apply skribbl --local`.
+
 ### CORS / allowed origins
 
 By default `ALLOWED_ORIGINS = "*"` in `wrangler.toml` (development + native clients). For the web build on Cloudflare Pages, set it to the exact Pages origin:

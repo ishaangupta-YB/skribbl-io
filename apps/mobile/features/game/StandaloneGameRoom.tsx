@@ -11,7 +11,7 @@ import React, { useMemo } from "react";
 import type { Avatar } from "@skribbl/shared";
 import { GameScreen } from "./GameScreen";
 import { GameDepsProvider } from "./integration/GameDepsContext";
-import { createStandaloneGameDeps, stubDarkTheme, stubLightTheme } from "./integration/stubs";
+import { createStandaloneGameDeps, stubDarkTheme, stubLightTheme } from "./integration/stub-deps";
 import type { GameTheme } from "./integration/contracts";
 import type { Identity } from "./state/types";
 

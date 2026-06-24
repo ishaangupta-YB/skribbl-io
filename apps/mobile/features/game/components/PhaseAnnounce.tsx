@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, View } from "react-native";
+import React, { useEffect, useMemo, useRef } from "react";
+import { View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useTheme } from "../integration/GameDepsContext";
 import { selectDrawer, selectPhase } from "../state/selectors";
 import type { RoomSnapshot } from "../state/types";
@@ -28,25 +29,27 @@ export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.J
   const drawer = selectDrawer(snapshot);
   const youDraw = drawer?.id === snapshot.youId;
 
-  const fade = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(-24)).current;
-  const scale = useRef(new Animated.Value(0.9)).current;
+  const fade = useSharedValue(0);
+  const translateY = useSharedValue(-24);
+  const scale = useSharedValue(0.9);
   const lastKeyRef = useRef<string | null>(null);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastAnnouncementRef = useRef<Announcement | null>(null);
 
-  const announcement: Announcement | null =
-    phase === "choosing" || phase === "drawing"
-      ? {
-          title: round > 0 ? `Round ${round}` : "Draw!",
-          subtitle: youDraw
-            ? "Your turn to draw"
-            : drawer
-              ? `${drawer.nickname} is drawing`
-              : "Get ready…",
-          emoji: drawer?.avatar.emoji,
-        }
-      : null;
+  const announcement = useMemo<Announcement | null>(() => {
+    if (phase === "choosing" || phase === "drawing") {
+      return {
+        title: round > 0 ? `Round ${round}` : "Draw!",
+        subtitle: youDraw
+          ? "Your turn to draw"
+          : drawer
+            ? `${drawer.nickname} is drawing`
+            : "Get ready…",
+        emoji: drawer?.avatar.emoji,
+      };
+    }
+    return null;
+  }, [phase, round, youDraw, drawer]);
 
   if (announcement) {
     lastAnnouncementRef.current = announcement;
@@ -63,12 +66,8 @@ export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.J
     }
 
     const hide = () => {
-      Animated.parallel([
-        Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: -16, duration: 200, useNativeDriver: true }),
-      ]).start(() => {
-        lastAnnouncementRef.current = null;
-      });
+      fade.value = withTiming(0, { duration: 200 });
+      translateY.value = withTiming(-16, { duration: 200 });
     };
 
     if (!announcement) {
@@ -76,14 +75,12 @@ export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.J
       return;
     }
 
-    fade.setValue(0);
-    translateY.setValue(-24);
-    scale.setValue(0.9);
-    Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0, useNativeDriver: true, speed: 14, bounciness: 6 }),
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 6 }),
-    ]).start();
+    fade.value = 0;
+    translateY.value = -24;
+    scale.value = 0.9;
+    fade.value = withTiming(1, { duration: 220 });
+    translateY.value = withSpring(0, { damping: 12, stiffness: 160 });
+    scale.value = withSpring(1, { damping: 12, stiffness: 160 });
 
     hideTimerRef.current = setTimeout(hide, VISIBLE_MS);
 
@@ -92,35 +89,41 @@ export function PhaseAnnounce({ snapshot }: { snapshot: RoomSnapshot }): React.J
     };
   }, [announcement, phase, round, drawer?.id, youDraw, fade, translateY, scale]);
 
+  const containerStyle = useMemo(
+    () => ({
+      position: "absolute" as const,
+      top: theme.spacing(10),
+      left: 0,
+      right: 0,
+      zIndex: 30,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    }),
+    [theme],
+  );
+  const bannerStyle = useMemo(
+    () => ({
+      backgroundColor: theme.colors.overlay,
+      borderRadius: theme.radius.xl,
+      paddingVertical: theme.spacing(3),
+      paddingHorizontal: theme.spacing(5),
+      alignItems: "center" as const,
+      gap: theme.spacing(2),
+      minWidth: 220,
+    }),
+    [theme],
+  );
+  const bannerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
+  }));
+
   const content = announcement ?? lastAnnouncementRef.current;
   if (!content) return null;
 
   return (
-    <View
-      pointerEvents="none"
-      style={{
-        position: "absolute",
-        top: theme.spacing(10),
-        left: 0,
-        right: 0,
-        zIndex: 30,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Animated.View
-        style={{
-          opacity: fade,
-          transform: [{ translateY }, { scale }],
-          backgroundColor: theme.colors.overlay,
-          borderRadius: theme.radius.xl,
-          paddingVertical: theme.spacing(3),
-          paddingHorizontal: theme.spacing(5),
-          alignItems: "center",
-          gap: theme.spacing(2),
-          minWidth: 220,
-        }}
-      >
+    <View pointerEvents="none" style={containerStyle}>
+      <Animated.View style={[bannerStyle, bannerAnimatedStyle]}>
         {content.emoji ? (
           <AvatarBubble emoji={content.emoji} color={drawer?.avatar.color ?? theme.colors.primary} size={48} />
         ) : null}

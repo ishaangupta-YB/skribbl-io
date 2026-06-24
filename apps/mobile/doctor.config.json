@@ -3,5 +3,8 @@
   "scope": "full",
   "supplyChain": {
     "severity": "warning"
+  },
+  "ignore": {
+    "rules": ["deslop/unused-export"]
   }
 }

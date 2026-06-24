@@ -1,8 +1,37 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import type { ClientMessage, Stroke } from "@skribbl/shared";
 import { RoomConnection } from "./RoomConnection";
 import { useRoomStore } from "./store";
 import type { ConnectionStatus, Identity } from "./types";
+
+interface ConnState {
+  status: ConnectionStatus;
+  youId: string | null;
+  connection: RoomConnection | null;
+}
+
+type ConnAction =
+  | { type: "open"; connection: RoomConnection }
+  | { type: "status"; status: ConnectionStatus }
+  | { type: "youId"; youId: string }
+  | { type: "closed" };
+
+const INITIAL_CONN_STATE: ConnState = { status: "idle", youId: null, connection: null };
+
+function connReducer(state: ConnState, action: ConnAction): ConnState {
+  switch (action.type) {
+    case "open":
+      return { status: "idle", youId: null, connection: action.connection };
+    case "status":
+      return { ...state, status: action.status };
+    case "youId":
+      return { ...state, youId: action.youId };
+    case "closed":
+      return INITIAL_CONN_STATE;
+    default:
+      return state;
+  }
+}
 
 export interface RoomConnectionHandle {
   status: ConnectionStatus;
@@ -36,10 +65,8 @@ export interface RoomConnectionHandle {
  *   <DrawingBoard connection={room.connection} />
  */
 export function useRoomConnection(roomId: string, identity: Identity): RoomConnectionHandle {
-  const [status, setStatus] = useState<ConnectionStatus>("idle");
-  const [youId, setYouId] = useState<string | null>(null);
+  const [{ status, youId, connection }, dispatch] = useReducer(connReducer, INITIAL_CONN_STATE);
   const connectionRef = useRef<RoomConnection | null>(null);
-  const [connection, setConnection] = useState<RoomConnection | null>(null);
 
   // Identity is an object literal in most callers; depend on its primitives so a
   // fresh-but-equal object doesn't tear down and rebuild the socket.
@@ -49,17 +76,17 @@ export function useRoomConnection(roomId: string, identity: Identity): RoomConne
   useEffect(() => {
     const conn = new RoomConnection({ roomId, identity: { nickname, avatar: { emoji, color } } });
     connectionRef.current = conn;
-    setConnection(conn);
+    dispatch({ type: "open", connection: conn });
 
     const store = useRoomStore.getState();
     store.reset();
 
     const offStatus = conn.on("status", (next) => {
-      setStatus(next);
+      dispatch({ type: "status", status: next });
       useRoomStore.getState().setStatus(next);
     });
     const offMessage = conn.on("message", (message) => {
-      if (message.type === "room:state") setYouId(message.youId);
+      if (message.type === "room:state") dispatch({ type: "youId", youId: message.youId });
       useRoomStore.getState().applyServerMessage(message);
     });
 
@@ -70,8 +97,7 @@ export function useRoomConnection(roomId: string, identity: Identity): RoomConne
       offMessage();
       conn.disconnect();
       connectionRef.current = null;
-      setConnection(null);
-      setYouId(null);
+      dispatch({ type: "closed" });
     };
   }, [roomId, nickname, emoji, color]);
 

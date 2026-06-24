@@ -138,12 +138,15 @@ export function useDrawingBoard({
   }, [connection]);
 
   // If we stop being the drawer mid-stroke, drop any dangling in-progress state.
+  // Driven solely by `canDraw` so it reacts to losing drawer status rather than
+  // chaining off the `current` stroke state it sets. `setCurrent(null)` is a
+  // no-op when already null, so this never causes an extra render.
   useEffect(() => {
-    if (!canDraw && (batcherRef.current || current)) {
+    if (!canDraw) {
       batcherRef.current = null;
       setCurrent(null);
     }
-  }, [canDraw, current]);
+  }, [canDraw]);
 
   return {
     color,

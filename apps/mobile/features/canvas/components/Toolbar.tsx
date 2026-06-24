@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import React, { useCallback } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { BRUSH_SIZES, PALETTE } from "../constants";
 import type { DrawMode } from "../lib/strokeBatcher";
 
@@ -36,26 +36,31 @@ export function Toolbar({
   brushSizes = BRUSH_SIZES,
   style,
 }: ToolbarProps): React.ReactElement {
+  const renderSwatch = useCallback(
+    ({ item: swatch }: { item: string }) => {
+      const selected = mode === "draw" && swatch.toLowerCase() === color.toLowerCase();
+      return (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`color ${swatch}`}
+          onPress={() => onSelectColor(swatch)}
+          style={[styles.swatch, { backgroundColor: swatch }, selected && styles.swatchSelected]}
+        />
+      );
+    },
+    [mode, color, onSelectColor],
+  );
+
   return (
     <View style={[styles.bar, style]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-        {palette.map((swatch) => {
-          const selected = mode === "draw" && swatch.toLowerCase() === color.toLowerCase();
-          return (
-            <Pressable
-              key={swatch}
-              accessibilityRole="button"
-              accessibilityLabel={`color ${swatch}`}
-              onPress={() => onSelectColor(swatch)}
-              style={[
-                styles.swatch,
-                { backgroundColor: swatch },
-                selected && styles.swatchSelected,
-              ]}
-            />
-          );
-        })}
-      </ScrollView>
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+        data={palette as string[]}
+        keyExtractor={(swatch) => swatch}
+        renderItem={renderSwatch}
+      />
 
       <View style={styles.row}>
         {brushSizes.map((size) => {

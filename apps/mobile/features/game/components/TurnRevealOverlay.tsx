@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, View } from "react-native";
+import React, { useEffect, useMemo } from "react";
+import { View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useTheme } from "../integration/GameDepsContext";
 import { selectPhase } from "../state/selectors";
 import type { RoomSnapshot } from "../state/types";
@@ -11,15 +12,34 @@ import { AvatarBubble, Card, Row, Txt } from "./primitives";
  */
 export function TurnRevealOverlay({ snapshot }: { snapshot: RoomSnapshot }): React.JSX.Element | null {
   const theme = useTheme();
+  // Driven by the server-pushed reveal frame, not a local UI event.
+  // react-doctor-disable-next-line react-doctor/no-event-handler
   const show = selectPhase(snapshot) === "reveal" && Boolean(snapshot.reveal);
-  const pop = useRef(new Animated.Value(0)).current;
+  const pop = useSharedValue(0);
 
   useEffect(() => {
     if (show) {
-      pop.setValue(0);
-      Animated.spring(pop, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 8 }).start();
+      pop.value = 0;
+      pop.value = withSpring(1, { damping: 11, stiffness: 150 });
     }
   }, [show, snapshot.reveal?.word, pop]);
+
+  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
+
+  const overlayStyle = useMemo(
+    () => ({
+      position: "absolute" as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.colors.overlay,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      padding: theme.spacing(6),
+    }),
+    [theme],
+  );
 
   if (!show || !snapshot.reveal) return null;
 
@@ -28,21 +48,8 @@ export function TurnRevealOverlay({ snapshot }: { snapshot: RoomSnapshot }): Rea
     .sort((a, b) => b.roundPoints - a.roundPoints);
 
   return (
-    <View
-      pointerEvents="none"
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: theme.colors.overlay,
-        alignItems: "center",
-        justifyContent: "center",
-        padding: theme.spacing(6),
-      }}
-    >
-      <Animated.View style={{ transform: [{ scale: pop }], width: "100%", maxWidth: 420 }}>
+    <View pointerEvents="none" style={overlayStyle}>
+      <Animated.View style={[{ width: "100%", maxWidth: 420 }, popStyle]}>
         <Card style={{ alignItems: "center", gap: theme.spacing(3) }}>
           <Txt variant="caption" color={theme.colors.textMuted}>
             THE WORD WAS

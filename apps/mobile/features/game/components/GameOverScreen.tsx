@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, ScrollView, View } from "react-native";
+import React, { useEffect } from "react";
+import { ScrollView, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import type { ScoreEntry } from "@skribbl/shared";
 import { useTheme } from "../integration/GameDepsContext";
 import { selectCanStart } from "../state/selectors";
@@ -83,13 +84,14 @@ function WinnerCard({
   youWon: boolean;
   theme: GameTheme;
 }): React.JSX.Element {
-  const scale = useRef(new Animated.Value(0.6)).current;
+  const scale = useSharedValue(0.6);
   useEffect(() => {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 12, bounciness: 10 }).start();
+    scale.value = withSpring(1, { damping: 9, stiffness: 130 });
   }, [scale]);
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   return (
-    <Animated.View style={{ alignItems: "center", gap: theme.spacing(2), transform: [{ scale }] }}>
+    <Animated.View style={[{ alignItems: "center", gap: theme.spacing(2) }, animatedStyle]}>
       <AvatarBubble emoji={winner.avatar.emoji} color={winner.avatar.color} size={96} ring={theme.colors.warning} />
       <Txt variant="display" weight="800" color={theme.colors.warning} align="center">
         {youWon ? "You win! 🎉" : `${winner.nickname} wins!`}

@@ -5,17 +5,22 @@
   "type": "module",
   "description": "Phase 4 QA: E2E playthrough, load test, and security pass for skribbl-cloud.",
   "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config e2e/vitest.config.ts",
     "test:e2e": "vitest run --config e2e/vitest.config.ts",
+    "test:playwright": "playwright test --config e2e/playwright.config.ts",
     "load": "tsx load/load-test.ts"
   },
   "dependencies": {
     "@skribbl/shared": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "@types/node": "^22.9.0",
     "@types/ws": "^8.5.13",
     "tsx": "^4.19.2",
-    "vitest": "3.0.5",
+    "typescript": "^5.7.2",
+    "vitest": "3.2.6",
     "ws": "^8.18.0"
   }
 }

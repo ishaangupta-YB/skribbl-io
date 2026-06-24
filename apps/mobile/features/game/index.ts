@@ -27,16 +27,11 @@ export type {
   UseRoomConnection,
 } from "./integration/contracts";
 
-// Stub deps (development / pre-integration use)
-export {
-  createStandaloneGameDeps,
-  noopHaptics,
-  noopSound,
-  StubDrawCanvas,
-  stubDarkTheme,
-  stubLightTheme,
-  useStubRoomConnection,
-} from "./integration/stubs";
+// Component/hook stubs (development / pre-integration use)
+export { StubDrawCanvas, useStubRoomConnection } from "./integration/stubs";
+
+// Non-component dependency stubs (themes, factory)
+export { createStandaloneGameDeps, stubDarkTheme, stubLightTheme } from "./integration/stub-deps";
 
 // State layer (reducer + selectors + types) — reusable by Agent B's store
 export { applyServerMessage, createInitialSnapshot, reduceMessages } from "./state/gameStore";

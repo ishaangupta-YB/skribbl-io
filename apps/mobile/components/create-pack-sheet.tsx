@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import { View } from "react-native";
 import { createWordPack, ApiError } from "@/lib/api";
 import type { WordPackDetail } from "@/lib/api";
 import { parseCustomWords } from "@/lib/utils";
-import { Button, Input, Sheet, SwitchRow, Text, TextArea } from "./ui";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Sheet } from "./ui/modal";
+import { SwitchRow } from "./ui/switch-row";
+import { Text } from "./ui/text";
+import { TextArea } from "./ui/textarea";
 
 interface CreatePackSheetProps {
   visible: boolean;
@@ -16,21 +21,42 @@ const MAX_PACK_NAME_LEN = 50;
 const MAX_PACK_DESCRIPTION_LEN = 200;
 const MAX_WORDS_PER_PACK = 100;
 
-export function CreatePackSheet({ visible, onClose, nickname, onCreated }: CreatePackSheetProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [wordsText, setWordsText] = useState("");
-  const [isPublic, setIsPublic] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface FormState {
+  name: string;
+  description: string;
+  wordsText: string;
+  isPublic: boolean;
+  saving: boolean;
+  error: string | null;
+}
 
-  const reset = () => {
-    setName("");
-    setDescription("");
-    setWordsText("");
-    setIsPublic(true);
-    setError(null);
-  };
+const INITIAL_STATE: FormState = {
+  name: "",
+  description: "",
+  wordsText: "",
+  isPublic: true,
+  saving: false,
+  error: null,
+};
+
+type FormAction = { type: "patch"; patch: Partial<FormState> } | { type: "reset" };
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case "patch":
+      return { ...state, ...action.patch };
+    case "reset":
+      return INITIAL_STATE;
+    default:
+      return state;
+  }
+}
+
+export function CreatePackSheet({ visible, onClose, nickname, onCreated }: CreatePackSheetProps) {
+  const [state, dispatch] = useReducer(formReducer, INITIAL_STATE);
+  const { name, description, wordsText, isPublic, saving, error } = state;
+
+  const reset = () => dispatch({ type: "reset" });
 
   const handleClose = () => {
     reset();
@@ -39,25 +65,25 @@ export function CreatePackSheet({ visible, onClose, nickname, onCreated }: Creat
 
   const onSave = async () => {
     if (saving) return;
-    setError(null);
+    dispatch({ type: "patch", patch: { error: null } });
     const trimmedName = name.trim();
     const trimmedDescription = description.trim();
     const parsed = parseCustomWords(wordsText);
 
     if (trimmedName.length === 0) {
-      setError("Pack name is required.");
+      dispatch({ type: "patch", patch: { error: "Pack name is required." } });
       return;
     }
     if (parsed.length === 0) {
-      setError("At least one word is required.");
+      dispatch({ type: "patch", patch: { error: "At least one word is required." } });
       return;
     }
     if (parsed.length > MAX_WORDS_PER_PACK) {
-      setError(`At most ${MAX_WORDS_PER_PACK} words allowed per pack.`);
+      dispatch({ type: "patch", patch: { error: `At most ${MAX_WORDS_PER_PACK} words allowed per pack.` } });
       return;
     }
 
-    setSaving(true);
+    dispatch({ type: "patch", patch: { saving: true } });
     try {
       const res = await createWordPack({
         name: trimmedName,
@@ -71,9 +97,9 @@ export function CreatePackSheet({ visible, onClose, nickname, onCreated }: Creat
       onCreated(res.pack);
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : "Could not create the pack.";
-      setError(msg);
+      dispatch({ type: "patch", patch: { error: msg } });
     } finally {
-      setSaving(false);
+      dispatch({ type: "patch", patch: { saving: false } });
     }
   };
 
@@ -83,14 +109,14 @@ export function CreatePackSheet({ visible, onClose, nickname, onCreated }: Creat
         <Input
           label="Pack name"
           value={name}
-          onChangeText={setName}
+          onChangeText={(text) => dispatch({ type: "patch", patch: { name: text } })}
           maxLength={MAX_PACK_NAME_LEN}
           placeholder="My awesome pack"
         />
         <Input
           label="Description (optional)"
           value={description}
-          onChangeText={setDescription}
+          onChangeText={(text) => dispatch({ type: "patch", patch: { description: text } })}
           maxLength={MAX_PACK_DESCRIPTION_LEN}
           placeholder="A short description"
         />
@@ -98,14 +124,14 @@ export function CreatePackSheet({ visible, onClose, nickname, onCreated }: Creat
           label="Words"
           hint={`Separate words with commas or newlines. Max ${MAX_WORDS_PER_PACK} words, 30 characters each.`}
           value={wordsText}
-          onChangeText={setWordsText}
+          onChangeText={(text) => dispatch({ type: "patch", patch: { wordsText: text } })}
           placeholder="e.g. cat, dog, elephant…"
         />
         <SwitchRow
           label="Public"
           description="Other players can use this pack too."
           value={isPublic}
-          onValueChange={setIsPublic}
+          onValueChange={(value) => dispatch({ type: "patch", patch: { isPublic: value } })}
         />
         {error ? <Text className="text-xs text-danger">{error}</Text> : null}
         <Button label={saving ? "Saving…" : "Save pack"} disabled={saving} onPress={onSave} />

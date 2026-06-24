@@ -46,6 +46,9 @@ export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
     const playerCount = snapshot.room?.players.length ?? 0;
 
     // ---- connected / someone joined ----
+    // Driven by server-pushed snapshot transitions, not a local UI event, so
+    // these side effects belong in an effect (syncing with an external system).
+    // react-doctor-disable-next-line react-doctor/no-event-handler
     if (snapshot.status === "open" && prev.status !== "open") {
       sound.play("join");
     }
@@ -116,6 +119,7 @@ export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
 
   // ---- final-countdown ticks + time-up (last 5s of the drawing phase) ----
   useEffect(() => {
+    // react-doctor-disable-next-line react-doctor/no-event-handler
     const phase = snapshot.room?.phase;
     if (phase !== "drawing") {
       mem.current.tickSecond = null;
@@ -125,6 +129,7 @@ export function useTurnFx(snapshot: RoomSnapshot, secondsLeft: number): void {
       mem.current.tickSecond = secondsLeft;
       sound.play("tick");
       haptics.selection();
+      // react-doctor-disable-next-line react-doctor/no-event-handler
     } else if (secondsLeft === 0 && mem.current.tickSecond === 1) {
       mem.current.tickSecond = 0;
       sound.play("timeUp");

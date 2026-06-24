@@ -4,9 +4,8 @@
  * these can be swapped for `components/ui/*`, but keeping them here lets the
  * game flow stand alone and stay decoupled from B's exact component API.
  */
-import React, { useRef } from "react";
+import React, { useMemo } from "react";
 import {
-  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -15,6 +14,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useHaptics, useTheme } from "../integration/GameDepsContext";
 import type { GameTheme } from "../integration/contracts";
 
@@ -129,15 +129,34 @@ export function Button({
 }): React.JSX.Element {
   const theme = useTheme();
   const haptics = useHaptics();
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
 
   const { bg, fg, border } = buttonColors(theme, variant, disabled);
 
-  const press = (to: number) =>
-    Animated.spring(scale, { toValue: to, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+  const press = (to: number) => {
+    scale.value = withSpring(to, { damping: 15, stiffness: 400 });
+  };
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  const buttonStyle = useMemo(
+    () => ({
+      backgroundColor: bg,
+      borderRadius: theme.radius.pill,
+      paddingVertical: theme.spacing(3),
+      paddingHorizontal: theme.spacing(5),
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      gap: theme.spacing(2),
+      borderWidth: border ? 1.5 : 0,
+      borderColor: border ?? "transparent",
+      opacity: disabled ? 0.55 : 1,
+    }),
+    [bg, border, disabled, theme],
+  );
 
   return (
-    <Animated.View style={[{ transform: [{ scale }] }, fullWidth ? { alignSelf: "stretch" } : null, style]}>
+    <Animated.View style={[animatedStyle, fullWidth ? { alignSelf: "stretch" } : null, style]}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled }}
@@ -152,19 +171,7 @@ export function Button({
         onPress={() => {
           if (!disabled) onPress();
         }}
-        style={{
-          backgroundColor: bg,
-          borderRadius: theme.radius.pill,
-          paddingVertical: theme.spacing(3),
-          paddingHorizontal: theme.spacing(5),
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: theme.spacing(2),
-          borderWidth: border ? 1.5 : 0,
-          borderColor: border ?? "transparent",
-          opacity: disabled ? 0.55 : 1,
-        }}
+        style={buttonStyle}
       >
         {icon}
         <Text style={{ color: fg, fontWeight: theme.font.weightBold, fontSize: theme.font.md }}>{label}</Text>
@@ -231,20 +238,22 @@ export function AvatarBubble({
   ring?: string;
   dimmed?: boolean;
 }): React.JSX.Element {
+  const style = useMemo(
+    () => ({
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      borderWidth: ring ? 2.5 : 0,
+      borderColor: ring ?? "transparent",
+      opacity: dimmed ? 0.5 : 1,
+    }),
+    [size, color, ring, dimmed],
+  );
   return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: color,
-        alignItems: "center",
-        justifyContent: "center",
-        borderWidth: ring ? 2.5 : 0,
-        borderColor: ring ?? "transparent",
-        opacity: dimmed ? 0.5 : 1,
-      }}
-    >
+    <View style={style}>
       <Text style={{ fontSize: size * 0.5 }}>{emoji}</Text>
     </View>
   );

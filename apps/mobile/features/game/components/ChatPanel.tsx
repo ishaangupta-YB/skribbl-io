@@ -23,10 +23,22 @@ export function ChatPanel({
   const theme = useTheme();
   const [text, setText] = useState("");
   const scrollRef = useRef<ScrollView>(null);
-
   const locked = selectGuessLocked(snapshot);
   const isDrawer = selectIsDrawer(snapshot);
   const phase = selectPhase(snapshot);
+  const inputStyle = useMemo(
+    () => ({
+      flex: 1,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.surfaceAlt,
+      borderRadius: theme.radius.pill,
+      paddingHorizontal: theme.spacing(4),
+      paddingVertical: theme.spacing(2),
+      fontSize: theme.font.md,
+      opacity: locked ? 0.6 : 1,
+    }),
+    [theme, locked],
+  );
 
   const colorByPlayer = useMemo(() => {
     const map = new Map<string, string>();
@@ -99,16 +111,7 @@ export function ChatPanel({
           returnKeyType="send"
           onSubmitEditing={(_e: NativeSyntheticEvent<TextInputSubmitEditingEventData>) => submit()}
           blurOnSubmit={false}
-          style={{
-            flex: 1,
-            color: theme.colors.text,
-            backgroundColor: theme.colors.surfaceAlt,
-            borderRadius: theme.radius.pill,
-            paddingHorizontal: theme.spacing(4),
-            paddingVertical: theme.spacing(2),
-            fontSize: theme.font.md,
-            opacity: locked ? 0.6 : 1,
-          }}
+          style={inputStyle}
         />
         <Button label="Send" onPress={submit} disabled={locked || text.trim().length === 0} variant="primary" />
       </Row>

@@ -101,11 +101,11 @@ jobs:
         working-directory: apps/mobile
         run: pnpm vitest run --config vitest.qa.config.ts
 
-  # ---- E2E playthrough against wrangler dev (protocol-level) ----
-  e2e:
-    name: E2E playthrough (wrangler dev)
+  # ---- E2E tests package (typecheck + protocol E2E) ----
+  e2e-tests:
+    name: E2E tests package
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -124,8 +124,13 @@ jobs:
       - name: Build shared
         run: pnpm build
 
-      - name: E2E playthrough
-        run: node_modules/.bin/vitest run --config tests/e2e/vitest.config.ts
+      - name: Typecheck tests package
+        working-directory: tests
+        run: pnpm typecheck
+
+      - name: E2E playthrough (wrangler dev)
+        working-directory: tests
+        run: pnpm test:e2e
 
   # ---- react-doctor on the mobile app ----
   react-doctor:

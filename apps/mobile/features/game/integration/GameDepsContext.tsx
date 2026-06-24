@@ -3,7 +3,7 @@
  * deps through `useGameDeps()` / the focused hooks below, so they never import
  * Agent B's or Agent C's modules directly.
  */
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, use } from "react";
 import type {
   DrawCanvasComponent,
   GameDeps,
@@ -21,7 +21,7 @@ export function GameDepsProvider({ deps, children }: GameDepsProviderProps): Rea
 }
 
 export function useGameDeps(): GameDeps {
-  const deps = useContext(GameDepsContext);
+  const deps = use(GameDepsContext);
   if (!deps) {
     throw new Error("useGameDeps must be used within a <GameDepsProvider>. See features/game/README.md.");
   }
@@ -46,10 +46,4 @@ export function useDrawCanvas(): DrawCanvasComponent {
 
 export function useRoomConnectionFactory(): UseRoomConnection {
   return useGameDeps().useRoomConnection;
-}
-
-/** Memoized helper for components that build StyleSheets from theme tokens. */
-export function useThemedStyles<T>(factory: (theme: GameTheme) => T): T {
-  const theme = useTheme();
-  return useMemo(() => factory(theme), [theme, factory]);
 }

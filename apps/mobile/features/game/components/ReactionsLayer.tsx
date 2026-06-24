@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { Text, View } from "react-native";
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useActiveReactions, REACTION_LIFETIME_MS } from "../hooks/useActiveReactions";
 import type { ReactionEvent } from "../state/types";
 
@@ -22,32 +23,26 @@ function hashFraction(id: string): number {
 }
 
 function ReactionBubble({ reaction }: { reaction: ReactionEvent }): React.JSX.Element {
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress = useSharedValue(0);
 
   useEffect(() => {
-    Animated.timing(progress, {
-      toValue: 1,
-      duration: REACTION_LIFETIME_MS,
-      useNativeDriver: true,
-    }).start();
+    progress.value = withTiming(1, { duration: REACTION_LIFETIME_MS });
   }, [progress]);
 
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, -180] });
-  const opacity = progress.interpolate({ inputRange: [0, 0.15, 0.7, 1], outputRange: [0, 1, 1, 0] });
-  const scale = progress.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0.4, 1.2, 0.9] });
   const drift = (hashFraction(reaction.id) - 0.5) * 60;
   const leftPct = `${10 + hashFraction(reaction.id) * 70}%` as `${number}%`;
 
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.15, 0.7, 1], [0, 1, 1, 0]),
+    transform: [
+      { translateY: interpolate(progress.value, [0, 1], [0, -180]) },
+      { translateX: drift },
+      { scale: interpolate(progress.value, [0, 0.2, 1], [0.4, 1.2, 0.9]) },
+    ],
+  }));
+
   return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        bottom: 80,
-        left: leftPct,
-        opacity,
-        transform: [{ translateY }, { translateX: drift }, { scale }],
-      }}
-    >
+    <Animated.View style={[{ position: "absolute", bottom: 80, left: leftPct }, animatedStyle]}>
       <Text style={{ fontSize: 34 }}>{reaction.emoji}</Text>
     </Animated.View>
   );

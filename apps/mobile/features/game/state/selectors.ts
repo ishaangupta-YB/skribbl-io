@@ -9,11 +9,6 @@ export function selectPhase(snapshot: RoomSnapshot): GamePhase {
   return snapshot.room?.phase ?? "lobby";
 }
 
-export function selectYou(snapshot: RoomSnapshot): Player | null {
-  if (!snapshot.room || !snapshot.youId) return null;
-  return snapshot.room.players.find((p) => p.id === snapshot.youId) ?? null;
-}
-
 export function selectDrawer(snapshot: RoomSnapshot): Player | null {
   const drawerId = snapshot.room?.drawerId ?? null;
   if (!snapshot.room || !drawerId) return null;
@@ -146,12 +141,6 @@ export function selectWordDisplay(snapshot: RoomSnapshot): WordDisplay {
 
 function toSlots(word: string): string[] {
   return [...word].map((ch) => (/\s/u.test(ch) ? SPACE : ch));
-}
-
-/** How many letters of the masked word have been revealed (for a hint pill). */
-export function selectRevealedHintCount(snapshot: RoomSnapshot): number {
-  if (!snapshot.maskedWord) return 0;
-  return [...snapshot.maskedWord].filter((ch) => /[a-z0-9]/iu.test(ch)).length;
 }
 
 /** Whether the local player is the drawer and must pick a word right now. */

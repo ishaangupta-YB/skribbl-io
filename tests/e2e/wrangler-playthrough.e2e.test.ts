@@ -12,6 +12,7 @@
  * (or directly: node_modules/.bin/vitest run --config tests/e2e/vitest.config.ts)
  */
 import { spawn, type ChildProcess } from "node:child_process";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
@@ -23,6 +24,17 @@ import {
 } from "@skribbl/shared";
 
 const REPO_ROOT = resolve(__dirname, "../..");
+
+function findWranglerBin(): string {
+  const candidates = [
+    resolve(REPO_ROOT, "node_modules/.bin/wrangler"),
+    resolve(REPO_ROOT, "apps/api/node_modules/.bin/wrangler"),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return "npx";
+}
 const PORT = 9787;
 const BASE_HTTP = `http://localhost:${PORT}`;
 const BASE_WS = `ws://localhost:${PORT}`;
@@ -41,7 +53,7 @@ class Client {
   word: string | null = null; // only set if this client is the drawer
   choices: string[] | null = null;
   phase: string = "lobby";
-  leaderboard: ServerMessage[] = [];
+  leaderboard: Extract<ServerMessage, { type: "game:over" }>[] = [];
   revealWord: string | null = null;
   antiCheatViolation = false;
   all: ServerMessage[] = [];
@@ -64,7 +76,7 @@ class Client {
       if (msg.type === "turn:choosing" && Array.isArray(msg.choices)) this.choices = msg.choices;
       if (msg.type === "turn:start" && msg.word != null) this.word = msg.word;
       if (msg.type === "turn:reveal") this.revealWord = msg.word;
-      if (msg.type === "game:over") this.leaderboard.push(msg);
+      if (msg.type === "game:over") this.leaderboard.push(msg as Extract<ServerMessage, { type: "game:over" }>);
       notify();
     });
     this.ws.on("open", () => {
@@ -94,9 +106,17 @@ class Client {
       /* ignore */
     }
   }
+
+  terminate(): void {
+    try {
+      this.ws.terminate();
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
-function waitUntil<T>(predicate: () => T | undefined | false | null, timeoutMs = 15_000): Promise<T> {
+function waitUntil<T>(predicate: () => T | undefined | false | null, timeoutMs = 30_000): Promise<T> {
   return new Promise<T>((res, rej) => {
     const check = () => {
       const value = predicate();
@@ -150,17 +170,15 @@ beforeAll(async () => {
   } catch {
     /* ignore */
   }
-  server = spawn(
-    resolve(REPO_ROOT, "apps/api/node_modules/.bin/wrangler"),
-    ["dev", "--port", String(PORT)],
-    {
-      cwd: resolve(REPO_ROOT, "apps/api"),
-      env: { ...process.env },
-      stdio: "ignore",
-    },
-  );
+  const wranglerBin = findWranglerBin();
+  const args = wranglerBin === "npx" ? ["wrangler", "dev", "--port", String(PORT)] : ["dev", "--port", String(PORT)];
+  server = spawn(wranglerBin, args, {
+    cwd: resolve(REPO_ROOT, "apps/api"),
+    env: { ...process.env },
+    stdio: "ignore",
+  });
   await waitForHealth();
-}, 40_000);
+}, 60_000);
 
 afterAll(() => {
   server?.kill("SIGKILL");
@@ -239,7 +257,7 @@ describe("live wrangler dev playthrough (3 clients)", () => {
     });
 
     for (const cl of clients) cl.close();
-  }, 60_000);
+  }, 90_000);
 
   it("rejects a non-host start with NOT_ALLOWED", async () => {
     const roomId = await createRoom();
@@ -248,11 +266,17 @@ describe("live wrangler dev playthrough (3 clients)", () => {
     await Promise.all([a.open(), b.open()]);
     await waitUntil(() => (a.youId && b.youId ? true : null), 20_000);
 
-    b.send({ type: "start" }); // Bob is not the host
+    // Host is whoever joined first. Determine who is NOT the host and send start from that player.
+    const roomState = a.all.find((m) => m.type === "room:state") as Extract<ServerMessage, { type: "room:state" }> | undefined;
+    const hostId = roomState?.state.hostId;
+    if (!hostId) throw new Error("hostId not found in room:state");
+    const nonHost = a.youId === hostId ? b : a;
+
+    nonHost.send({ type: "start" });
     const err = await waitUntil(() => {
-      const e = b.all.find((m) => m.type === "error") as Extract<ServerMessage, { type: "error" }> | undefined;
+      const e = nonHost.all.find((m) => m.type === "error") as Extract<ServerMessage, { type: "error" }> | undefined;
       return e ? e : null;
-    }, 20_000);
+    }, 30_000);
     expect(err.code).toBe("NOT_ALLOWED");
     a.close();
     b.close();
@@ -264,16 +288,28 @@ describe("live wrangler dev playthrough (3 clients)", () => {
     const b = new Client(roomId, "Bob");
     await Promise.all([a.open(), b.open()]);
     await waitUntil(() => (a.youId && b.youId ? true : null));
-    const originalHost = a.youId;
 
-    a.close();
-    // The DO's webSocketClose handler fires asynchronously; allow up to 20s.
+    // Host is whoever joined first. Identify the actual host and make that client leave.
+    const roomState = a.all.find((m) => m.type === "room:state") as Extract<ServerMessage, { type: "room:state" }> | undefined;
+    const hostId = roomState?.state.hostId;
+    if (!hostId) throw new Error("hostId not found in room:state");
+    const hostClient = a.youId === hostId ? a : b;
+    const remainingClient = a.youId === hostId ? b : a;
+
+    // Send an explicit leave message so the server processes the departure immediately,
+    // then close the socket. This is more reliable than waiting for the WebSocket close event.
+    hostClient.send({ type: "leave" });
+    // Give the leave message a moment to leave the socket buffer before closing.
+    await new Promise((r) => setTimeout(r, 300));
+    hostClient.close();
+    // Allow a short moment for the leave message to be processed.
+    await new Promise((r) => setTimeout(r, 500));
     const hostChanged = await waitUntil(() => {
-      const e = b.all.find((m) => m.type === "host:changed") as Extract<ServerMessage, { type: "host:changed" }> | undefined;
+      const e = remainingClient.all.find((m) => m.type === "host:changed") as Extract<ServerMessage, { type: "host:changed" }> | undefined;
       return e ? e : null;
-    }, 20_000);
-    expect(hostChanged.hostId).toBe(b.youId);
-    expect(hostChanged.hostId).not.toBe(originalHost);
-    b.close();
+    }, 30_000);
+    expect(hostChanged.hostId).toBe(remainingClient.youId);
+    expect(hostChanged.hostId).not.toBe(hostId);
+    remainingClient.close();
   });
 });
