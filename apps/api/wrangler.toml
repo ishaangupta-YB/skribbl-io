@@ -3,6 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2025-03-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Default to the Cloudflare workers.dev subdomain on first deploy.
+# To use a custom domain, add a `routes` or `workers_dev = false` block here
+# after creating the DNS route in the Cloudflare dashboard.
+workers_dev = true
+
 # One Durable Object per room (idFromName(roomId)) — authoritative state,
 # hibernating WebSockets, and alarm-driven turn timers all live here.
 [[durable_objects.bindings]]
@@ -21,14 +26,20 @@ new_sqlite_classes = ["GameRoom"]
 [[d1_databases]]
 binding = "DB"
 database_name = "skribbl"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "00000000-0000-0000-0000-000000000000" # <-- replace with real id from `wrangler d1 create skribbl`
 migrations_dir = "migrations"
 
 # KV: cached public lobby list + per-IP rate limiting on room creation.
 # Create with: wrangler kv namespace create skribbl-kv  (paste the id below)
 [[kv_namespaces]]
 binding = "KV"
-id = "0000000000000000000000000000kvid"
+id = "0000000000000000000000000000kvid" # <-- replace with real id from `wrangler kv namespace create skribbl-kv`
+
+# Public env vars (not secrets). Set ALLOWED_ORIGINS to the Cloudflare Pages
+# web origin (e.g. "https://skribbl-cloud.pages.dev") for production, or keep
+# "*" for local/native development. Updated via `wrangler deploy`.
+[vars]
+ALLOWED_ORIGINS = "*"
 
 [observability]
 enabled = true

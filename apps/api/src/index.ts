@@ -10,9 +10,22 @@ import {
 } from "@skribbl/shared";
 import type { Env } from "./env";
 import { checkRateLimit } from "./lib/rate-limit";
-import { getRoomMeta, readPublicLobby, roomInitKey, seedLobbyRoom, type RoomInit } from "./lib/lobby";
+import {
+  getRoomMeta,
+  readPublicLobby,
+  roomInitKey,
+  seedLobbyRoom,
+  type RoomInit,
+} from "./lib/lobby";
 import { getLobbyRoom } from "./db/queries";
-import { createWordPack, getWordPack, listAllWordPacks, validateWordPack, MAX_PACK_DESCRIPTION_LEN, MAX_PACK_NAME_LEN } from "./lib/words";
+import {
+  createWordPack,
+  getWordPack,
+  listAllWordPacks,
+  validateWordPack,
+  MAX_PACK_DESCRIPTION_LEN,
+  MAX_PACK_NAME_LEN,
+} from "./lib/words";
 
 export { GameRoom } from "./durable/GameRoom";
 
@@ -23,17 +36,27 @@ function secureRandom(): number {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Anonymous game, no cookies/credentials — permissive CORS for the Expo client
-// (native + web). WebSocket upgrades are not subject to CORS.
-app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"] }));
+// Anonymous game, no cookies/credentials — CORS for the Expo client (native + web).
+// WebSocket upgrades are not subject to CORS. ALLOWED_ORIGINS can be "*" for
+// development/native or the exact Pages web origin in production.
+app.use("*", (c, next) => {
+  const origins = c.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim());
+  const allow = origins.length === 1 && origins[0] === "*" ? "*" : origins;
+  return cors({ origin: allow, allowMethods: ["GET", "POST", "OPTIONS"] })(c, next);
+});
 
 app.get("/health", (c) => c.json({ ok: true }));
 
 /** Create a room. Body: partial RoomSettings + optional name. Returns { roomId }. */
 app.post("/api/rooms", async (c) => {
   const ip = c.req.header("CF-Connecting-IP") ?? c.req.header("x-forwarded-for") ?? "anonymous";
-  const allowed = await checkRateLimit(c.env.KV, ip, { limit: 15, windowSec: 60, prefix: "rl:create" });
-  if (!allowed) return c.json({ error: "RATE_LIMITED", message: "too many rooms created — slow down" }, 429);
+  const allowed = await checkRateLimit(c.env.KV, ip, {
+    limit: 15,
+    windowSec: 60,
+    prefix: "rl:create",
+  });
+  if (!allowed)
+    return c.json({ error: "RATE_LIMITED", message: "too many rooms created — slow down" }, 429);
 
   let body: unknown = {};
   try {
@@ -47,7 +70,8 @@ app.post("/api/rooms", async (c) => {
   }
 
   const settings: RoomSettings = { ...defaultRoomSettings, ...parsed.data };
-  if (!settings.wordPackIds || settings.wordPackIds.length === 0) settings.wordPackIds = ["default"];
+  if (!settings.wordPackIds || settings.wordPackIds.length === 0)
+    settings.wordPackIds = ["default"];
 
   const roomName = extractRoomName(body);
   const roomId = await generateUniqueRoomId(c.env);
@@ -98,8 +122,13 @@ app.get("/api/words", async (c) => {
 /** Create a custom word pack. */
 app.post("/api/word-packs", async (c) => {
   const ip = c.req.header("CF-Connecting-IP") ?? c.req.header("x-forwarded-for") ?? "anonymous";
-  const allowed = await checkRateLimit(c.env.KV, ip, { limit: 10, windowSec: 60, prefix: "rl:pack" });
-  if (!allowed) return c.json({ error: "RATE_LIMITED", message: "too many packs created — slow down" }, 429);
+  const allowed = await checkRateLimit(c.env.KV, ip, {
+    limit: 10,
+    windowSec: 60,
+    prefix: "rl:pack",
+  });
+  if (!allowed)
+    return c.json({ error: "RATE_LIMITED", message: "too many packs created — slow down" }, 429);
 
   let body: Record<string, unknown> = {};
   try {
@@ -115,7 +144,8 @@ app.post("/api/word-packs", async (c) => {
 
   const validationErrors: string[] = [];
   if (name.length === 0) validationErrors.push("Pack name is required.");
-  if (name.length > MAX_PACK_NAME_LEN) validationErrors.push(`Pack name must be ${MAX_PACK_NAME_LEN} characters or fewer.`);
+  if (name.length > MAX_PACK_NAME_LEN)
+    validationErrors.push(`Pack name must be ${MAX_PACK_NAME_LEN} characters or fewer.`);
   if (description.length > MAX_PACK_DESCRIPTION_LEN) {
     validationErrors.push(`Description must be ${MAX_PACK_DESCRIPTION_LEN} characters or fewer.`);
   }

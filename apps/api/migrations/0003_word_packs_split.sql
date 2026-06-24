@@ -1,9 +1,10 @@
--- 0002_word_packs_split.sql — normalize word packs into word_packs + words
+-- 0003_word_packs_split.sql — normalize word packs into word_packs + words
 --
--- Moves the JSON `words` column into a dedicated `words` table, adds
--- `is_public` / `created_by` for host-created custom packs, and re-seeds the
--- bundled packs from `@skribbl/shared` so the default pack remains available
--- even when D1 is empty.
+-- Depends on 0001_init.sql (creates the legacy `word_packs` table) and
+-- 0002_add_room_name.sql. Moves the JSON `words` column into a dedicated
+-- `words` table, adds `is_public` / `created_by` for host-created custom packs,
+-- and re-seeds the bundled packs from `@skribbl/shared` so the default pack
+-- remains available even when D1 is empty.
 
 -- 1. New normalized word_packs table.
 CREATE TABLE IF NOT EXISTS word_packs_new (
