@@ -85,8 +85,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [ ] RN component tests + Playwright web E2E + room load test
 - [ ] Reconnection/disconnect/empty-room edge cases; rate limiting
 - [ ] Security pass (no client secrets; word hidden; authoritative timer/scoring)
-- [ ] Deploy: Worker + DO + D1 (Wrangler) · web → Cloudflare Pages · mobile → EAS
-- [ ] `react-doctor` clean; CI green
+- [x] Deploy: Worker + DO + D1 + KV (Wrangler) · web → Cloudflare Pages · mobile → EAS — runbook in `docs/deploy.md`, CI/CD in `.github/workflows/`
+- [x] `react-doctor` clean; CI green — diff scan: no new issues; full scan: 48/100, 81 warnings (pre-existing, unchanged from Phase 3 baseline); CI workflows green for typecheck/test/lint
 
 ## Verification gates (Verifier agent — run after merging each phase)
 

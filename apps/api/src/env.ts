@@ -11,4 +11,6 @@ export interface Env {
   DB: D1Database;
   /** Cached lobby list + per-IP rate limiting + room init settings. */
   KV: KVNamespace;
+  /** CORS allow-list for REST endpoints. Comma-separated origins or "*". */
+  ALLOWED_ORIGINS: string;
 }

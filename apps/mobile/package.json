@@ -9,6 +9,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "export:web": "expo export -p web",
+    "deploy:web": "wrangler pages deploy dist --project-name skribbl-cloud",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run --config features/game/vitest.config.ts"
@@ -49,6 +51,7 @@
     "tsx": "^4.19.2",
     "typescript": "~6.0.3",
     "vitest": "3.0.5",
+    "wrangler": "~4.10.0",
     "ws": "^8.18.0"
   }
 }

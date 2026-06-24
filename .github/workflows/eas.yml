@@ -1,0 +1,76 @@
+name: EAS Mobile Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "EAS build profile"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+      platform:
+        description: "Build platform"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+      submit:
+        description: "Submit to App Store / Play Console after build (production only)"
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    name: EAS build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install workspace
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm build
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: EAS build
+        env:
+          EXPO_PUBLIC_WS_URL: ${{ secrets.EXPO_PUBLIC_WS_URL }}
+        run: |
+          PROFILE=${{ github.event.inputs.profile || 'production' }}
+          PLATFORM=${{ github.event.inputs.platform || 'all' }}
+          SUBMIT=${{ github.event.inputs.submit || 'false' }}
+          if [ "$PROFILE" = "production" ] && [ "$SUBMIT" = "true" ]; then
+            eas build --profile production --platform $PLATFORM --submit --non-interactive --no-wait
+          else
+            eas build --profile $PROFILE --platform $PLATFORM --non-interactive --no-wait
+          fi
