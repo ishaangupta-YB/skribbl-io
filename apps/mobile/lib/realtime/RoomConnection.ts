@@ -256,10 +256,14 @@ export class RoomConnection {
       if (!this.ws || this.ws.readyState !== WS_OPEN) return;
       this.rawSend({ type: "ping" });
       // Expect a `pong` shortly; otherwise assume a half-open socket and recycle.
-      this.clearPongTimer();
-      this.pongTimer = setTimeout(() => {
-        this.recycleSocket();
-      }, HEARTBEAT_TIMEOUT_MS);
+      // Only arm the timeout if one is not already pending — otherwise every
+      // heartbeat tick would reset the timeout before it can ever fire, and a
+      // dead socket would never be recycled.
+      if (this.pongTimer === null) {
+        this.pongTimer = setTimeout(() => {
+          this.recycleSocket();
+        }, HEARTBEAT_TIMEOUT_MS);
+      }
     }, this.heartbeatIntervalMs);
   }
 

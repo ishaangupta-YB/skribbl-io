@@ -1,0 +1,21 @@
+{
+  "name": "@skribbl/tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Phase 4 QA: E2E playthrough, load test, and security pass for skribbl-cloud.",
+  "scripts": {
+    "test:e2e": "vitest run --config e2e/vitest.config.ts",
+    "load": "tsx load/load-test.ts"
+  },
+  "dependencies": {
+    "@skribbl/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/ws": "^8.5.13",
+    "tsx": "^4.19.2",
+    "vitest": "3.0.5",
+    "ws": "^8.18.0"
+  }
+}
