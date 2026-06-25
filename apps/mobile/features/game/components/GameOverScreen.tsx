@@ -34,13 +34,13 @@ export function GameOverScreen({
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <Confetti active />
       <ScrollView contentContainerStyle={{ padding: theme.spacing(6), gap: theme.spacing(5), alignItems: "center" }}>
-        <Txt variant="caption" color={theme.colors.textMuted}>
+        <Txt variant="caption" color={theme.colors.textMuted} testID="game-over-title">
           GAME OVER
         </Txt>
 
         {winner ? <WinnerCard winner={winner} youWon={youWon} theme={theme} /> : null}
 
-        <Card style={{ width: "100%", maxWidth: 440, gap: theme.spacing(2) }}>
+        <Card style={{ width: "100%", maxWidth: 440, gap: theme.spacing(2) }} testID="game-over-leaderboard">
           {leaderboard.map((entry, i) => (
             <Row key={entry.playerId} justify="space-between" style={{ paddingVertical: theme.spacing(1) }}>
               <Row gap={theme.spacing(3)}>

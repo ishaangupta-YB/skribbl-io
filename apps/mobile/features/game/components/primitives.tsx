@@ -28,6 +28,7 @@ export function Txt({
   align,
   style,
   numberOfLines,
+  testID,
 }: {
   children: React.ReactNode;
   variant?: TxtVariant;
@@ -36,11 +37,13 @@ export function Txt({
   align?: TextStyle["textAlign"];
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
+  testID?: string;
 }): React.JSX.Element {
   const theme = useTheme();
   const base = variantStyle(theme, variant);
   return (
     <Text
+      testID={testID}
       numberOfLines={numberOfLines}
       style={[
         base,
@@ -84,14 +87,17 @@ export function Card({
   children,
   style,
   padded = true,
+  testID,
 }: {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   padded?: boolean;
+  testID?: string;
 }): React.JSX.Element {
   const theme = useTheme();
   return (
     <View
+      testID={testID}
       style={[
         {
           backgroundColor: theme.colors.card,
@@ -118,6 +124,7 @@ export function Button({
   icon,
   style,
   fullWidth,
+  testID,
 }: {
   label: string;
   onPress: () => void;
@@ -126,6 +133,7 @@ export function Button({
   icon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   fullWidth?: boolean;
+  testID?: string;
 }): React.JSX.Element {
   const theme = useTheme();
   const haptics = useHaptics();
@@ -158,6 +166,7 @@ export function Button({
   return (
     <Animated.View style={[animatedStyle, fullWidth ? { alignSelf: "stretch" } : null, style]}>
       <Pressable
+        testID={testID}
         accessibilityRole="button"
         accessibilityState={{ disabled }}
         disabled={disabled}

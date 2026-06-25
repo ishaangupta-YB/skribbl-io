@@ -34,7 +34,7 @@ export function LobbyView({
           <Txt variant="caption" color={theme.colors.textMuted}>
             ROOM CODE
           </Txt>
-          <Txt variant="display" weight="800" color={theme.colors.primary} style={{ letterSpacing: 6 }}>
+          <Txt variant="display" weight="800" color={theme.colors.primary} style={{ letterSpacing: 6 }} testID="lobby-room-code">
             {snapshot.room?.roomId ?? "—"}
           </Txt>
           <Txt variant="caption" color={theme.colors.textMuted}>
@@ -42,7 +42,7 @@ export function LobbyView({
           </Txt>
         </View>
 
-        <Card style={{ width: "100%", maxWidth: 440, gap: theme.spacing(3) }}>
+        <Card style={{ width: "100%", maxWidth: 440, gap: theme.spacing(3) }} testID="lobby-player-list">
           <Row justify="space-between">
             <Txt variant="caption" color={theme.colors.textMuted}>
               PLAYERS ({count}/{snapshot.room?.settings.maxPlayers ?? GAME.MAX_PLAYERS})
@@ -63,7 +63,7 @@ export function LobbyView({
         <View style={{ width: "100%", maxWidth: 440, gap: theme.spacing(3) }}>
           {isHost ? (
             <>
-              <Button label="Start game" variant="primary" fullWidth disabled={!canStart} onPress={onStart} />
+              <Button label="Start game" variant="primary" fullWidth disabled={!canStart} onPress={onStart} testID="lobby-start-game" />
               {need > 0 ? (
                 <Txt variant="caption" color={theme.colors.textMuted} align="center">
                   Need {need} more player{need === 1 ? "" : "s"} to start
@@ -75,7 +75,7 @@ export function LobbyView({
               Waiting for the host to start…
             </Txt>
           )}
-          <Button label="Leave" variant="ghost" fullWidth onPress={onLeave} />
+          <Button label="Leave" variant="ghost" fullWidth onPress={onLeave} testID="lobby-leave" />
         </View>
       </ScrollView>
     </View>

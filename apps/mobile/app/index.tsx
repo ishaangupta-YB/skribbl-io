@@ -25,6 +25,7 @@ export default function HomeScreen() {
           variant="secondary"
           onPress={() => router.push("/settings")}
           accessibilityLabel="Open settings"
+          testID="home-open-settings"
         >
           <SettingsIcon size={20} color={colors.foreground} />
         </IconButton>
@@ -50,6 +51,7 @@ export default function HomeScreen() {
             variant="secondary"
             size="sm"
             label="Edit"
+            testID="home-edit-profile"
             onPress={() => router.push("/settings")}
           />
         </Card>
@@ -58,6 +60,7 @@ export default function HomeScreen() {
           <Button
             size="lg"
             label="Create room"
+            testID="home-create-room"
             leftIcon={<Plus size={20} color={colors.primaryForeground} />}
             onPress={() => router.push("/create")}
           />
@@ -65,6 +68,7 @@ export default function HomeScreen() {
             size="lg"
             variant="secondary"
             label="Join with a code"
+            testID="home-join-code"
             leftIcon={<LogIn size={20} color={colors.secondaryForeground} />}
             onPress={() => router.push("/join")}
           />
@@ -72,6 +76,7 @@ export default function HomeScreen() {
             size="lg"
             variant="outline"
             label="Browse public rooms"
+            testID="home-browse-rooms"
             leftIcon={<Globe size={20} color={colors.foreground} />}
             onPress={() => router.push("/lobby")}
           />

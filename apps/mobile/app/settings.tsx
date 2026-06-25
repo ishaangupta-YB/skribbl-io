@@ -41,6 +41,7 @@ export default function SettingsScreen() {
             maxLength={GAME.MAX_NICKNAME_LEN}
             placeholder="Your name"
             autoCapitalize="words"
+            testID="settings-nickname"
           />
         </Card>
 

@@ -3,59 +3,100 @@ import { expect, test, type Page } from "@playwright/test";
 /**
  * Phase 4 QA — Playwright web E2E: 2-client game to the leaderboard.
  *
- * Prerequisites (see playwright.config.ts header):
+ * Drives the real Expo web client against a live `wrangler dev` backend.
+ * Prerequisites:
  *   - `wrangler dev` running on :8787 (the API/DO backend)
- *   - `expo start --web` running on :8081 (the web client)
+ *   - `expo start --web` running on :8081 (or a static web build served there)
  *   - `EXPO_PUBLIC_WS_URL=ws://localhost:8787` set for the Expo app
  *
- * The test opens 2 browser contexts (Alice = host/drawer, Bob = guesser), creates
- * a room via the UI, joins, starts the game, the drawer picks a word and draws,
- * the guesser guesses, and both see the leaderboard after the round.
+ * The test opens 2 browser contexts (Alice = host/drawer, Bob = guesser),
+ * creates a room via the UI, joins, starts the game, the drawer picks a word,
+ * the guesser guesses it, and both see the game-over leaderboard.
  */
 
 const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? "http://localhost:8081";
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8787";
 
+const DRAW_TIME_MIN = 30; // seconds; matches the backend minimum
+
+async function waitForHealthy(url: string, timeoutMs = 30_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) return;
+    } catch {
+      /* not up yet */
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`${url} did not become healthy`);
+}
+
 async function setNickname(page: Page, nickname: string): Promise<void> {
-  // The home screen shows the current nickname with an "Edit" button.
   await page.goto(WEB_URL);
-  await page.getByRole("button", { name: "Edit" }).click();
-  const input = page.getByPlaceholder(/nickname/i).or(page.getByLabel(/nickname/i));
-  await input.fill(nickname);
-  await page.getByRole("button", { name: /save|done|confirm/i }).click();
+  await page.waitForLoadState("networkidle");
+  await page.getByTestId("home-edit-profile").click();
+  await page.waitForURL(/\/settings/, { timeout: 10_000 });
+  await page.getByTestId("settings-nickname").fill(nickname);
+  // The settings screen auto-saves on change; go back home.
+  await page.goto(WEB_URL);
+  await page.waitForLoadState("networkidle");
 }
 
 async function createRoomViaUI(page: Page): Promise<string> {
-  await page.getByRole("button", { name: /create room/i }).click();
-  // Set a short round duration for the test (if the UI exposes it).
-  const durationInput = page.getByLabel(/round.*duration/i).or(page.getByPlaceholder(/duration/i));
-  if (await durationInput.isVisible().catch(() => false)) {
-    await durationInput.fill("30");
+  await page.getByTestId("home-create-room").click();
+  await page.waitForURL(/\/create/, { timeout: 10_000 });
+
+  // Speed the test up: 1 round, minimum draw time.
+  await page.getByTestId("create-rounds-decrease").click();
+  await page.getByTestId("create-rounds-decrease").click();
+  await expect(page.getByTestId("create-rounds")).toContainText("1");
+
+  while (true) {
+    const text = await page.getByTestId("create-draw-time").textContent();
+    if (text?.includes(`${DRAW_TIME_MIN}s`)) break;
+    await page.getByTestId("create-draw-time-decrease").click();
   }
-  await page.getByRole("button", { name: /create|start.*room|confirm/i }).click();
-  // Wait for navigation to /room/[id] and extract the room code from the URL.
+
+  await page.getByTestId("create-room-button").click();
   await page.waitForURL(/\/room\//, { timeout: 15_000 });
-  const url = page.url();
-  const match = url.match(/\/room\/([A-Z0-9]+)/i);
-  return match?.[1] ?? "";
+  await page.waitForLoadState("networkidle");
+
+  // Read the room code from the lobby UI.
+  const roomCode = await page.getByTestId("lobby-room-code").textContent();
+  expect(roomCode).toBeTruthy();
+  return roomCode!.trim();
 }
 
 async function joinRoomViaUI(page: Page, roomId: string): Promise<void> {
   await page.goto(WEB_URL);
-  await page.getByRole("button", { name: /join.*code/i }).click();
-  const codeInput = page.getByPlaceholder(/code|room.*id/i).or(page.getByLabel(/code|room.*id/i));
-  await codeInput.fill(roomId);
-  await page.getByRole("button", { name: /join|enter|confirm/i }).click();
+  await page.waitForLoadState("networkidle");
+  await page.getByTestId("home-join-code").click();
+  await page.waitForURL(/\/join/, { timeout: 10_000 });
+  await page.getByTestId("join-room-code").fill(roomId);
+  await page.getByTestId("join-room-button").click();
   await page.waitForURL(new RegExp(`/room/${roomId}`, "i"), { timeout: 15_000 });
+  await page.waitForLoadState("networkidle");
+}
+
+async function pickFirstWord(page: Page): Promise<string> {
+  const choice = page.locator('[data-testid^="word-choice-"]').first();
+  await expect(choice).toBeVisible({ timeout: 15_000 });
+  const word = await choice.textContent();
+  expect(word).toBeTruthy();
+  await choice.click();
+  return word!.trim().toLowerCase();
+}
+
+async function waitForGameOver(page: Page, timeoutMs = 60_000): Promise<void> {
+  await expect(page.getByTestId("game-over-leaderboard")).toBeVisible({ timeout: timeoutMs });
 }
 
 test.describe("web game E2E (2 clients)", () => {
   test("creates a room, plays a round, and shows the leaderboard", async ({ browser }) => {
-    // Skip if the web client or API is not running.
-    const apiHealth = await fetch(`${API_URL}/health`).catch(() => null);
-    test.skip(!apiHealth?.ok, "wrangler dev is not running on :8787");
-    const webReachable = await fetch(WEB_URL).catch(() => null);
-    test.skip(!webReachable, "expo web is not running on :8081");
+    await waitForHealthy(`${API_URL}/health`);
+    await waitForHealthy(WEB_URL);
 
     const aliceCtx = await browser.newContext();
     const bobCtx = await browser.newContext();
@@ -63,46 +104,40 @@ test.describe("web game E2E (2 clients)", () => {
     const bob = await bobCtx.newPage();
 
     try {
-      // Alice creates a room; Bob joins with the code.
+      // Alice sets up the room.
       await setNickname(alice, "Alice");
       const roomId = await createRoomViaUI(alice);
-      expect(roomId.length).toBeGreaterThan(0);
+      await expect(alice.getByTestId("lobby-player-list")).toContainText("Alice");
 
+      // Bob joins.
       await setNickname(bob, "Bob");
       await joinRoomViaUI(bob, roomId);
 
-      // Both should see the lobby with 2 players.
-      await expect(alice.getByText(/bob/i)).toBeVisible({ timeout: 10_000 });
-      await expect(bob.getByText(/alice/i)).toBeVisible({ timeout: 10_000 });
+      // Both see the lobby with 2 players.
+      await expect(alice.getByTestId("lobby-player-list")).toContainText("Bob", { timeout: 10_000 });
+      await expect(bob.getByTestId("lobby-player-list")).toContainText("Alice", { timeout: 10_000 });
 
-      // Alice (host) starts the game.
-      await alice.getByRole("button", { name: /start/i }).click();
+      // Alice starts the game.
+      await alice.getByTestId("lobby-start-game").click();
 
-      // Alice (drawer) sees word choices; pick the first.
-      const wordChoice = alice.getByText(/[a-z]+/i).first();
-      await expect(wordChoice).toBeVisible({ timeout: 10_000 });
-      // Click the first word choice button.
-      const choiceButtons = alice.getByRole("button").filter({ hasText: /^[a-z]+$/i });
-      await choiceButtons.first().click();
+      // Alice picks the first word choice and Bob will guess it.
+      const word = await pickFirstWord(alice);
 
-      // Both should see the drawing phase (masked word or the real word).
-      await expect(alice.getByText(/draw|canvas|time/i).first()).toBeVisible({ timeout: 10_000 });
+      // Wait for the drawing phase to appear for both.
+      await expect(alice.getByTestId("word-banner")).toBeVisible({ timeout: 15_000 });
+      await expect(bob.getByTestId("word-banner")).toBeVisible({ timeout: 15_000 });
 
-      // Bob (guesser) enters the word in chat — but we don't know the word from
-      // the UI (it's hidden from guessers). Instead, we verify the game
-      // progresses: either by waiting for the round timer to expire or by
-      // checking that the leaderboard eventually appears.
-      // For a robust E2E without knowing the word, we wait for the round to end
-      // (30s max) and verify the reveal + next turn or game-over.
-      const leaderboard = alice.getByText(/leaderboard|game over|final score/i).or(
-        alice.getByRole("heading", { name: /leaderboard|game over/i }),
-      );
-      await expect(leaderboard.first()).toBeVisible({ timeout: 90_000 });
-      // Bob should also see the leaderboard.
-      const bobLeaderboard = bob.getByText(/leaderboard|game over|final score/i).or(
-        bob.getByRole("heading", { name: /leaderboard|game over/i }),
-      );
-      await expect(bobLeaderboard.first()).toBeVisible({ timeout: 15_000 });
+      // Bob guesses the word.
+      await bob.getByTestId("chat-input").fill(word);
+      await bob.getByTestId("chat-send").click();
+
+      // Both should eventually see the game-over leaderboard.
+      await waitForGameOver(alice);
+      await waitForGameOver(bob);
+
+      // Sanity check: both players appear in the leaderboard.
+      await expect(alice.getByTestId("game-over-leaderboard")).toContainText("Alice");
+      await expect(alice.getByTestId("game-over-leaderboard")).toContainText("Bob");
     } finally {
       await aliceCtx.close();
       await bobCtx.close();

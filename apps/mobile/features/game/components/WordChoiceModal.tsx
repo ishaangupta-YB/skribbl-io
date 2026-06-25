@@ -70,7 +70,14 @@ export function WordChoiceModal({
             </Txt>
             <View style={{ width: "100%", gap: theme.spacing(3) }}>
               {(snapshot.choices ?? []).map((word) => (
-                <Button key={word} label={word} variant="primary" fullWidth onPress={() => onSelectWord(word)} />
+                <Button
+                  key={word}
+                  label={word}
+                  variant="primary"
+                  fullWidth
+                  onPress={() => onSelectWord(word)}
+                  testID={`word-choice-${word}`}
+                />
               ))}
             </View>
           </>

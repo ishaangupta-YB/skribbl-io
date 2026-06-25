@@ -16,6 +16,7 @@ export interface StepperProps {
   /** Custom display for the value (e.g. `${v}s`). */
   format?: (value: number) => string;
   className?: string;
+  testID?: string;
 }
 
 export function Stepper({
@@ -27,12 +28,13 @@ export function Stepper({
   step = 1,
   format,
   className,
+  testID,
 }: StepperProps) {
   const { colors } = useTheme();
   const set = (next: number) => onChange(Math.round(clamp(next, min, max)));
 
   return (
-    <View className={cn("flex-row items-center justify-between", className)}>
+    <View className={cn("flex-row items-center justify-between", className)} testID={testID}>
       {label ? <Text variant="label">{label}</Text> : null}
       <View className="flex-row items-center gap-3">
         <IconButton
@@ -41,6 +43,7 @@ export function Stepper({
           disabled={value <= min}
           onPress={() => set(value - step)}
           accessibilityLabel={`Decrease ${label ?? "value"}`}
+          testID={testID ? `${testID}-decrease` : undefined}
         >
           <Minus size={18} color={colors.foreground} />
         </IconButton>
@@ -53,6 +56,7 @@ export function Stepper({
           disabled={value >= max}
           onPress={() => set(value + step)}
           accessibilityLabel={`Increase ${label ?? "value"}`}
+          testID={testID ? `${testID}-increase` : undefined}
         >
           <Plus size={18} color={colors.foreground} />
         </IconButton>

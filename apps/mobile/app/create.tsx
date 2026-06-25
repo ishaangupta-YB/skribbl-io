@@ -142,6 +142,7 @@ export default function CreateScreen() {
               placeholder="Your name"
               autoCapitalize="words"
               returnKeyType="done"
+              testID="create-nickname"
             />
           </View>
           <Button variant="secondary" size="sm" label="Avatar" onPress={() => setAvatarOpen(true)} />
@@ -156,6 +157,7 @@ export default function CreateScreen() {
             min={GAME.MIN_ROUNDS}
             max={GAME.MAX_ROUNDS}
             onChange={(maxRounds) => setSettings({ maxRounds })}
+            testID="create-rounds"
           />
           <Stepper
             label="Draw time"
@@ -165,6 +167,7 @@ export default function CreateScreen() {
             step={10}
             format={(v) => `${v}s`}
             onChange={(roundDurationSec) => setSettings({ roundDurationSec })}
+            testID="create-draw-time"
           />
           <Stepper
             label="Max players"
@@ -242,6 +245,7 @@ export default function CreateScreen() {
           size="lg"
           label={creating ? "Creating…" : "Create room"}
           disabled={creating}
+          testID="create-room-button"
           leftIcon={<Sparkles size={20} color={colors.primaryForeground} />}
           onPress={onCreate}
         />

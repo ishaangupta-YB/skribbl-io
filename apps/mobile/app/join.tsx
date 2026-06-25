@@ -72,6 +72,7 @@ export default function JoinScreen() {
             maxLength={GAME.MAX_NICKNAME_LEN}
             placeholder="Your name"
             autoCapitalize="words"
+            testID="join-nickname"
           />
           <Input
             label="Room code"
@@ -84,6 +85,7 @@ export default function JoinScreen() {
             error={error}
             returnKeyType="go"
             onSubmitEditing={onJoin}
+            testID="join-room-code"
           />
         </Card>
 
@@ -91,6 +93,7 @@ export default function JoinScreen() {
           size="lg"
           label={joining ? "Joining…" : "Join room"}
           disabled={joining}
+          testID="join-room-button"
           leftIcon={<LogIn size={20} color={colors.primaryForeground} />}
           onPress={onJoin}
         />

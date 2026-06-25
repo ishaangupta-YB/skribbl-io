@@ -34,7 +34,7 @@ export function WordBanner({ snapshot }: { snapshot: RoomSnapshot }): React.JSX.
     : theme.colors.text;
 
   return (
-    <View style={{ alignItems: "center", paddingVertical: theme.spacing(3), gap: theme.spacing(1) }}>
+    <View style={{ alignItems: "center", paddingVertical: theme.spacing(3), gap: theme.spacing(1) }} testID="word-banner">
       <Txt variant="caption" color={theme.colors.textMuted}>
         {phase === "reveal"
           ? "The word was"

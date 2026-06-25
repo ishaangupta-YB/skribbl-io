@@ -102,6 +102,7 @@ export function ChatPanel({
         }}
       >
         <TextInput
+          testID="chat-input"
           value={text}
           onChangeText={setText}
           editable={!locked}
@@ -113,7 +114,7 @@ export function ChatPanel({
           blurOnSubmit={false}
           style={inputStyle}
         />
-        <Button label="Send" onPress={submit} disabled={locked || text.trim().length === 0} variant="primary" />
+        <Button label="Send" onPress={submit} disabled={locked || text.trim().length === 0} variant="primary" testID="chat-send" />
       </Row>
     </View>
   );
