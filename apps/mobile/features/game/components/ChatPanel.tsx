@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, TextInput, View, type NativeSyntheticEvent, type TextInputSubmitEditingEventData } from "react-native";
-import Animated, { ZoomIn } from "react-native-reanimated";
+import Animated, { FadeInDown, FadeOutDown, ZoomIn } from "react-native-reanimated";
 import { GAME, type ChatKind, type ChatMessage } from "@skribbl/shared";
 import { useTheme } from "../integration/GameDepsContext";
-import { selectGuessLocked, selectIsDrawer, selectPhase } from "../state/selectors";
+import { selectCloseFeedback, selectGuessLocked, selectIsDrawer, selectPhase } from "../state/selectors";
+import { useNow } from "../hooks/useNow";
 import type { GameTheme } from "../integration/contracts";
 import type { RoomSnapshot } from "../state/types";
 import { Button, Row, Txt } from "./primitives";
@@ -26,6 +27,13 @@ export function ChatPanel({
   const locked = selectGuessLocked(snapshot);
   const isDrawer = selectIsDrawer(snapshot);
   const phase = selectPhase(snapshot);
+
+  // The private "you're close!" nudge is transient: the reducer keeps
+  // `guessFeedback` until the next turn, so visibility is derived from a ticking
+  // clock and auto-dismisses after CLOSE_FEEDBACK_TTL_MS (no snapshot mutation).
+  const hasCloseFeedback = snapshot.guessFeedback?.kind === "close";
+  const now = useNow(hasCloseFeedback, 250);
+  const closeFeedback = selectCloseFeedback(snapshot, now);
   const inputStyle = useMemo(
     () => ({
       flex: 1,
@@ -85,12 +93,16 @@ export function ChatPanel({
         )}
       </ScrollView>
 
-      {snapshot.guessFeedback?.kind === "close" ? (
-        <View style={{ backgroundColor: theme.colors.close, paddingVertical: theme.spacing(1), alignItems: "center" }}>
+      {closeFeedback ? (
+        <Animated.View
+          entering={FadeInDown.springify().damping(16)}
+          exiting={FadeOutDown.duration(180)}
+          style={{ backgroundColor: theme.colors.close, paddingVertical: theme.spacing(1), alignItems: "center" }}
+        >
           <Txt variant="caption" color="#1A1D2E" weight="800">
-            ✨ {snapshot.guessFeedback.text}
+            ✨ {closeFeedback.text}
           </Txt>
-        </View>
+        </Animated.View>
       ) : null}
 
       <Row

@@ -59,15 +59,18 @@ export default function RootLayout() {
 `CanvasKitProvider` is a **no-op on native** (Metro resolves
 `CanvasKitProvider.native.tsx`); only the web build loads WASM.
 
-If CanvasKit fails to resolve from the bundler, pass an explicit `locateFile`
-that points at a CDN build whose version matches the installed
-`canvaskit-wasm` (check `node_modules/canvaskit-wasm/package.json`):
+By default `CanvasKitProvider` loads the WASM from a **version-pinned CDN**
+(jsdelivr `canvaskit-wasm@<CANVASKIT_WASM_VERSION>/bin/full/…`), so a static
+`expo export -p web` works on any host without bundling `canvaskit.wasm`. The
+version constant lives next to the provider and **must** match the installed
+`canvaskit-wasm` (check `node_modules/canvaskit-wasm/package.json`).
+
+To self-host the WASM or use a different CDN, override `loadOptions`:
 
 ```tsx
 <CanvasKitProvider
   loadOptions={{
-    locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/canvaskit-wasm@<VERSION>/bin/full/${file}`,
+    locateFile: (file) => `/canvaskit/${file}`, // served from your own origin
   }}
 >
 ```

@@ -78,7 +78,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] Public lobby browser (D1 + KV) — registry now has `name`, KV-cached list, paginated/joinable `GET /api/rooms`, and a Lobby Browser screen with live refresh / pull-to-refresh / Join. Verified with API tests + mobile typecheck/lint/react-doctor.
 - [x] Custom word packs (host-created, D1) — normalized `word_packs` + `words` tables; `POST /api/word-packs` + `GET /api/word-packs/:id`; pack picker + custom-word textarea + persistence in Create Room; default pack remains fallback.
 - [x] Sounds + haptics; theming; transitions + confetti — Polish Agent: added generated SFX, `useGameSound`/`useGameHaptics`, theme system override, `PhaseAnnounce`, score-tick + guess-pulse animations, win confetti intact, quick emoji picker.
-- [ ] Hints polish; close-guess UX
+- [x] Hints polish; close-guess UX — server already reveals hint letters (alarm-driven `turn:hint`) and detects close guesses (`isCloseGuess` → private `kind:"close"` chat). Client polish added: the "you're close!" banner now auto-dismisses after `CLOSE_FEEDBACK_TTL_MS` (pure `selectCloseFeedback` selector + local timer) with a fade in/out, and newly revealed hint letters pop in (`WordBanner`). Selector unit-tested; typecheck/test/lint/react-doctor green.
 
 ## Phase 4 — Hardening & deploy
 
@@ -93,4 +93,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] Phase 1 verified — `agents/verify.sh 1` → `docs/verification/phase-1.md` = PASS
 - [x] Phase 2 verified — `agents/verify.sh 2` → `docs/verification/phase-2.md` = PASS
 - [x] Phase 3 verified — `agents/verify.sh 3` → `docs/verification/phase-3.md` = PASS
-- [ ] Phase 4 verified — `agents/verify.sh 4` → PASS
+- [x] Phase 4 verified — `agents/verify.sh 4` → `docs/verification/phase-4.md` = PASS

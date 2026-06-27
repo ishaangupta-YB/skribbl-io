@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import Animated, { ZoomIn } from "react-native-reanimated";
 import { useTheme } from "../integration/GameDepsContext";
 import { selectIsDrawer, selectPhase, selectWordDisplay } from "../state/selectors";
 import type { RoomSnapshot } from "../state/types";
@@ -62,21 +63,27 @@ function WordSlot({ char, color, revealed }: { char: string; color: string; reve
   const theme = useTheme();
   const isSpace = char.trim().length === 0;
   const isBlank = char === "_";
+  // A guesser's blank turning into a letter is a progressively revealed hint —
+  // pop it in. The drawer's word and the reveal phase (`revealed`) stay static.
+  const isHintReveal = !revealed && !isBlank;
 
   if (isSpace) {
     return <View style={{ width: theme.spacing(3) }} />;
   }
 
+  const letter = (
+    <Txt variant="title" color={isBlank ? "transparent" : color} weight="800" style={{ letterSpacing: 1 }}>
+      {isBlank ? "x" : char.toUpperCase()}
+    </Txt>
+  );
+
   return (
     <View style={{ alignItems: "center", minWidth: 18 }}>
-      <Txt
-        variant="title"
-        color={isBlank ? "transparent" : color}
-        weight="800"
-        style={{ letterSpacing: 1 }}
-      >
-        {isBlank ? "x" : char.toUpperCase()}
-      </Txt>
+      {isHintReveal ? (
+        <Animated.View entering={ZoomIn.springify().damping(14)}>{letter}</Animated.View>
+      ) : (
+        letter
+      )}
       <View
         style={{
           height: 2,

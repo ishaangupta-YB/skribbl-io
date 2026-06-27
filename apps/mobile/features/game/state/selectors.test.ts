@@ -3,7 +3,9 @@ import { GAME, maskWord } from "@skribbl/shared";
 import { applyServerMessage, createInitialSnapshot } from "./gameStore";
 import { ALICE, BOB, YOU, mkPlayer, mkRoomState, scoreEntry } from "./fixtures";
 import {
+  CLOSE_FEEDBACK_TTL_MS,
   selectCanStart,
+  selectCloseFeedback,
   selectCountdown,
   selectGuessLocked,
   selectIsDrawer,
@@ -102,6 +104,35 @@ describe("selectScoreboard", () => {
     expect(rows.find((r) => r.playerId === ALICE)?.isDrawing).toBe(true);
     expect(rows.find((r) => r.playerId === BOB)?.hasGuessed).toBe(true);
     expect(rows.find((r) => r.playerId === YOU)?.isYou).toBe(true);
+  });
+});
+
+describe("selectCloseFeedback", () => {
+  const at = 1_000_000;
+  const closeSnapshot = (): RoomSnapshot => ({
+    ...createInitialSnapshot(),
+    guessFeedback: { kind: "close", text: '"tigr" is close!', at },
+  });
+
+  it("returns the nudge within the TTL window", () => {
+    const s = closeSnapshot();
+    expect(selectCloseFeedback(s, at)).toEqual(s.guessFeedback);
+    expect(selectCloseFeedback(s, at + CLOSE_FEEDBACK_TTL_MS - 1)).toEqual(s.guessFeedback);
+  });
+
+  it("expires exactly at the TTL boundary", () => {
+    const s = closeSnapshot();
+    expect(selectCloseFeedback(s, at + CLOSE_FEEDBACK_TTL_MS)).toBeNull();
+    expect(selectCloseFeedback(s, at + CLOSE_FEEDBACK_TTL_MS + 5_000)).toBeNull();
+  });
+
+  it("ignores correct-guess feedback and empty feedback", () => {
+    const correct: RoomSnapshot = {
+      ...createInitialSnapshot(),
+      guessFeedback: { kind: "correct", text: "+200 — you guessed it!", at },
+    };
+    expect(selectCloseFeedback(correct, at)).toBeNull();
+    expect(selectCloseFeedback(createInitialSnapshot(), at)).toBeNull();
   });
 });
 

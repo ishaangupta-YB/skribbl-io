@@ -3,7 +3,14 @@
  * so both the React layer and the test suite share identical display logic.
  */
 import { GAME, clamp, type GamePhase, type Player } from "@skribbl/shared";
-import type { Countdown, RoomSnapshot, ScoreRow } from "./types";
+import type { Countdown, GuessFeedback, RoomSnapshot, ScoreRow } from "./types";
+
+/**
+ * How long the private "you're close!" nudge stays on screen before it
+ * auto-dismisses. The reducer keeps `guessFeedback` until the next turn; this
+ * TTL is what makes the banner transient on the client.
+ */
+export const CLOSE_FEEDBACK_TTL_MS = 2500;
 
 export function selectPhase(snapshot: RoomSnapshot): GamePhase {
   return snapshot.room?.phase ?? "lobby";
@@ -166,4 +173,16 @@ export function selectCanStart(snapshot: RoomSnapshot): boolean {
     (phase === "lobby" || phase === "game-over") &&
     selectPlayerCount(snapshot) >= GAME.MIN_PLAYERS_TO_START
   );
+}
+
+/**
+ * The transient "you're close!" nudge, or `null` once it has expired. Returns
+ * the feedback only while it is a `close` kind and within
+ * {@link CLOSE_FEEDBACK_TTL_MS} of when it was received, so the banner
+ * auto-dismisses without mutating the snapshot.
+ */
+export function selectCloseFeedback(snapshot: RoomSnapshot, now: number): GuessFeedback | null {
+  const fb = snapshot.guessFeedback;
+  if (!fb || fb.kind !== "close") return null;
+  return now - fb.at < CLOSE_FEEDBACK_TTL_MS ? fb : null;
 }
