@@ -41,7 +41,7 @@ id = "c9094778b8ca409fa4827dfc1a7261b3"
 # websites are blocked by the browser. If you rename the Pages project or add a
 # custom domain, update this to match (comma-separated for multiple origins).
 [vars]
-ALLOWED_ORIGINS = "https://skribbl-cloud.pages.dev"
+ALLOWED_ORIGINS = "https://skribbl-io.pages.dev"
 
 [observability]
 enabled = true

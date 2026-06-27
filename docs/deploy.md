@@ -12,7 +12,7 @@
 | API backend  | Cloudflare Workers + Durable Objects | `wrangler deploy`                                   | `https://skribbl-api.<account>.workers.dev` |
 | D1 database  | Cloudflare D1                        | `wrangler d1 migrations apply skribbl`              | SQLite edge DB                              |
 | KV namespace | Cloudflare KV                        | bound in `wrangler.toml`                            | lobby cache + rate limit                    |
-| Web app      | Cloudflare Pages                     | `expo export -p web` + `wrangler pages deploy dist` | `https://skribbl-cloud.pages.dev`           |
+| Web app      | Cloudflare Pages                     | `expo export -p web` + `wrangler pages deploy dist` | `https://skribbl-io.pages.dev`                |
 | Mobile app   | EAS (Expo Application Services)      | `eas build --profile production`                    | TestFlight / Play internal testing          |
 
 ---
@@ -46,7 +46,7 @@ Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → pi
 
 | Setting                 | Value                                                          |
 | ----------------------- | -------------------------------------------------------------- |
-| Project name            | `skribbl-cloud` (→ `https://skribbl-cloud.pages.dev`)          |
+| Project name            | `skribbl-cloud` (→ `https://skribbl-io.pages.dev`)               |
 | Production branch        | `main`                                                        |
 | Framework preset        | None                                                           |
 | Root directory          | `/` (repo root — required for the pnpm workspace)              |
@@ -76,7 +76,7 @@ Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → pi
 Set `ALLOWED_ORIGINS` in `wrangler.toml [vars]` to the exact web origin(s) before launch (commit → Worker redeploys):
 
 ```toml
-ALLOWED_ORIGINS = "https://skribbl-cloud.pages.dev"
+ALLOWED_ORIGINS = "https://skribbl-io.pages.dev"
 ```
 
 Add a comma-separated custom domain if used. WebSocket upgrades skip CORS; REST endpoints (create/list room) are origin-checked, so this MUST include the Pages origin or the web app's REST calls fail.
@@ -86,7 +86,7 @@ Add a comma-separated custom domain if used. WebSocket upgrades skip CORS; REST 
 1. Provision D1 + KV, paste IDs into `wrangler.toml`, commit to `main`.
 2. Connect the **Worker** to Git → deploy. The deploy command runs `wrangler d1 migrations apply skribbl --remote` first (applies all 3 migrations in order, idempotently), then `wrangler deploy`. Copy the `…workers.dev` URL.
 3. Connect **Pages** to Git, set `EXPO_PUBLIC_WS_URL` to `wss://…workers.dev` → deploy → copy the `…pages.dev` URL.
-4. `ALLOWED_ORIGINS` is already set to `https://skribbl-cloud.pages.dev` in `wrangler.toml` — the Worker deploy in step 2 picks it up automatically. If you rename the Pages project or add a custom domain, update it and redeploy.
+4. `ALLOWED_ORIGINS` is already set to `https://skribbl-io.pages.dev` in `wrangler.toml` — the Worker deploy in step 2 picks it up automatically. If you rename the Pages project or add a custom domain, update it and redeploy.
 
 ---
 
@@ -162,16 +162,16 @@ Local development can recover by wiping `apps/api/.wrangler` and re-running `npx
 
 ### CORS / allowed origins
 
-`ALLOWED_ORIGINS` is set to `https://skribbl-cloud.pages.dev` in `wrangler.toml` for the public launch. For local development you can temporarily set it to `*`. For the web build on Cloudflare Pages, keep it set to the exact Pages origin:
+`ALLOWED_ORIGINS` is set to `https://skribbl-io.pages.dev` in `wrangler.toml` for the public launch. For local development you can temporarily set it to `*`. For the web build on Cloudflare Pages, keep it set to the exact Pages origin:
 
 ```bash
-npx wrangler deploy --var ALLOWED_ORIGINS:"https://skribbl-cloud.pages.dev"
+npx wrangler deploy --var ALLOWED_ORIGINS:"https://skribbl-io.pages.dev"
 ```
 
 For multiple origins, use a comma-separated list:
 
 ```bash
-npx wrangler deploy --var ALLOWED_ORIGINS:"https://skribbl-cloud.pages.dev,https://skribbl.io"
+npx wrangler deploy --var ALLOWED_ORIGINS:"https://skribbl-io.pages.dev,https://skribbl.io"
 ```
 
 The Worker REST layer already validates `Origin` against this list; WebSocket upgrades are not subject to CORS.
@@ -196,7 +196,7 @@ npx wrangler pages deploy dist --project-name skribbl-cloud
 After the first deploy, the Pages dashboard will show the URL, e.g.:
 
 ```
-https://skribbl-cloud.pages.dev
+https://skribbl-io.pages.dev
 ```
 
 ### Build settings (if connecting an external Git repo to Pages)

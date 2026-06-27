@@ -8,19 +8,19 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_WS_URL": "wss://skribbl-api.YOUR_ACCOUNT.workers.dev"
+        "EXPO_PUBLIC_WS_URL": "wss://skribbl-api.ishaangupta12102.workers.dev"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_WS_URL": "wss://skribbl-api.YOUR_ACCOUNT.workers.dev"
+        "EXPO_PUBLIC_WS_URL": "wss://skribbl-api.ishaangupta12102.workers.dev"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_WS_URL": "wss://skribbl-api.YOUR_ACCOUNT.workers.dev"
+        "EXPO_PUBLIC_WS_URL": "wss://skribbl-api.ishaangupta12102.workers.dev"
       }
     }
   },
