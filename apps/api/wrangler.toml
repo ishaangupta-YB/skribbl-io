@@ -26,20 +26,22 @@ new_sqlite_classes = ["GameRoom"]
 [[d1_databases]]
 binding = "DB"
 database_name = "skribbl"
-database_id = "00000000-0000-0000-0000-000000000000" # <-- replace with real id from `wrangler d1 create skribbl`
+database_id = "70709d68-2afa-4087-83cf-ceff75ad074a"
 migrations_dir = "migrations"
 
 # KV: cached public lobby list + per-IP rate limiting on room creation.
 # Create with: wrangler kv namespace create skribbl-kv  (paste the id below)
 [[kv_namespaces]]
 binding = "KV"
-id = "0000000000000000000000000000kvid" # <-- replace with real id from `wrangler kv namespace create skribbl-kv`
+id = "c9094778b8ca409fa4827dfc1a7261b3"
 
-# Public env vars (not secrets). Set ALLOWED_ORIGINS to the Cloudflare Pages
-# web origin (e.g. "https://skribbl-cloud.pages.dev") for production, or keep
-# "*" for local/native development. Updated via `wrangler deploy`.
+# Public env vars (not secrets). ALLOWED_ORIGINS is the CORS allow-list for the
+# REST endpoints (room create/list). It is locked to the production Cloudflare
+# Pages web origin. Native apps send no Origin header and are unaffected; other
+# websites are blocked by the browser. If you rename the Pages project or add a
+# custom domain, update this to match (comma-separated for multiple origins).
 [vars]
-ALLOWED_ORIGINS = "*"
+ALLOWED_ORIGINS = "https://skribbl-cloud.pages.dev"
 
 [observability]
 enabled = true

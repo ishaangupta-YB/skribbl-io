@@ -36,9 +36,9 @@ Dashboard → **Workers & Pages → Create → Workers → Connect to Git** → 
 | Production branch | `main`                                                              |
 | Root directory | `apps/api`                                                             |
 | Build command  | `pnpm install --frozen-lockfile && pnpm --filter @skribbl/shared build` |
-| Deploy command | `npx wrangler deploy`                                                  |
+| Deploy command | `npx wrangler d1 migrations apply skribbl --remote && npx wrangler deploy` |
 
-Node 22 is auto-selected from the repo `.nvmrc`. Bindings (Durable Object, D1, KV) and `[vars]` come from `wrangler.toml` — there is nothing to configure in the dashboard for those. First deploy prints `https://skribbl-api.<account>.workers.dev`.
+The deploy command applies D1 migrations (in order, idempotently) **before** deploying the Worker. Node 22 is auto-selected from the repo `.nvmrc`. Bindings (Durable Object, D1, KV) and `[vars]` come from `wrangler.toml` — there is nothing to configure in the dashboard for those. First deploy prints `https://skribbl-api.<account>.workers.dev`.
 
 ### Web app — "Pages" → Connect to Git
 
@@ -56,12 +56,20 @@ Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → pi
 
 `EXPO_PUBLIC_WS_URL` is **inlined into the JS bundle at build time** — it is a public value, not a secret. Set it under the Pages project's **Settings → Variables and Secrets → Production** (and Preview if you use preview deploys), then trigger a redeploy.
 
-### D1 + KV provisioning + migrations (all in the dashboard, no CLI)
+### D1 + KV provisioning + migrations
 
 1. **D1:** Storage & Databases → D1 → **Create** → name `skribbl`. Copy the **Database ID** into `apps/api/wrangler.toml` `[[d1_databases]] database_id`.
 2. **KV:** Storage & Databases → KV → **Create namespace** → name `skribbl-kv`. Copy the **ID** into `wrangler.toml` `[[kv_namespaces]] id`.
-3. **Schema:** D1 → `skribbl` → **Console** tab → paste & run, **in order**: `apps/api/migrations/0001_init.sql`, then `0002_add_room_name.sql`, then `0003_word_packs_split.sql`.
-4. The Durable Object SQLite class migration (`[[migrations]] tag = "v1"`) is applied automatically on the first Worker deploy.
+3. **Schema (automatic):** the Worker **Deploy command** runs `wrangler d1 migrations apply skribbl --remote` first, so the three migrations apply in order and are tracked in `d1_migrations` (idempotent across deploys). **Do not paste the migration SQL by hand** — the dashboard console does not enforce file order, so running `0003` before `0001` throws `Error: no such table: word_packs`.
+4. **If you already ran SQL by hand and hit an error,** reset the DB once in D1 → `skribbl` → **Console**, then let the next deploy re-apply cleanly:
+   ```sql
+   DROP TABLE IF EXISTS words;
+   DROP TABLE IF EXISTS word_packs_new;
+   DROP TABLE IF EXISTS word_packs;
+   DROP TABLE IF EXISTS lobby_rooms;
+   DROP TABLE IF EXISTS d1_migrations;
+   ```
+5. The Durable Object SQLite class migration (`[[migrations]] tag = "v1"`) is applied automatically on the first Worker deploy.
 
 ### CORS for public launch (required)
 
