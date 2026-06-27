@@ -84,10 +84,9 @@ Add a comma-separated custom domain if used. WebSocket upgrades skip CORS; REST 
 ### Order of operations
 
 1. Provision D1 + KV, paste IDs into `wrangler.toml`, commit to `main`.
-2. Run the 3 D1 migrations in the dashboard console.
-3. Connect the **Worker** to Git → deploy → copy the `…workers.dev` URL.
-4. Connect **Pages** to Git, set `EXPO_PUBLIC_WS_URL` to `wss://…workers.dev` → deploy → copy the `…pages.dev` URL.
-5. Set `ALLOWED_ORIGINS` to the `…pages.dev` origin, commit → Worker redeploys.
+2. Connect the **Worker** to Git → deploy. The deploy command runs `wrangler d1 migrations apply skribbl --remote` first (applies all 3 migrations in order, idempotently), then `wrangler deploy`. Copy the `…workers.dev` URL.
+3. Connect **Pages** to Git, set `EXPO_PUBLIC_WS_URL` to `wss://…workers.dev` → deploy → copy the `…pages.dev` URL.
+4. `ALLOWED_ORIGINS` is already set to `https://skribbl-cloud.pages.dev` in `wrangler.toml` — the Worker deploy in step 2 picks it up automatically. If you rename the Pages project or add a custom domain, update it and redeploy.
 
 ---
 
@@ -163,7 +162,7 @@ Local development can recover by wiping `apps/api/.wrangler` and re-running `npx
 
 ### CORS / allowed origins
 
-By default `ALLOWED_ORIGINS = "*"` in `wrangler.toml` (development + native clients). For the web build on Cloudflare Pages, set it to the exact Pages origin:
+`ALLOWED_ORIGINS` is set to `https://skribbl-cloud.pages.dev` in `wrangler.toml` for the public launch. For local development you can temporarily set it to `*`. For the web build on Cloudflare Pages, keep it set to the exact Pages origin:
 
 ```bash
 npx wrangler deploy --var ALLOWED_ORIGINS:"https://skribbl-cloud.pages.dev"
