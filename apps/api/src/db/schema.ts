@@ -45,7 +45,7 @@ export const lobbyRooms = sqliteTable(
     isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),
     phase: text("phase").notNull().default("lobby"),
     playerCount: integer("player_count").notNull().default(0),
-    maxPlayers: integer("max_players").notNull().default(8),
+    maxPlayers: integer("max_players").notNull().default(20),
     maxRounds: integer("max_rounds").notNull().default(3),
     roundDurationSec: integer("round_duration_sec").notNull().default(70),
     hostNickname: text("host_nickname"),

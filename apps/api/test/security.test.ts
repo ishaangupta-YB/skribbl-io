@@ -272,7 +272,7 @@ describe("Security — REST input validation", () => {
   it("rejects oversized / malformed settings on room create (400)", async () => {
     const cases: Record<string, unknown>[] = [
       { maxPlayers: 1 }, // below MIN_PLAYERS_TO_START
-      { maxPlayers: 99 }, // above MAX_PLAYERS
+      { maxPlayers: 99 }, // above MAX_PLAYERS (20)
       { maxRounds: 0 }, // below MIN_ROUNDS
       { roundDurationSec: 5 }, // below MIN_ROUND_DURATION_SEC
       { wordPackIds: [] }, // min 1

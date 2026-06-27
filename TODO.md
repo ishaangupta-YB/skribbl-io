@@ -94,3 +94,9 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] Phase 2 verified — `agents/verify.sh 2` → `docs/verification/phase-2.md` = PASS
 - [x] Phase 3 verified — `agents/verify.sh 3` → `docs/verification/phase-3.md` = PASS
 - [x] Phase 4 verified — `agents/verify.sh 4` → `docs/verification/phase-4.md` = PASS
+
+## Post-launch improvements
+
+- [x] Expand bundled word packs (default, animals, food) and add a new `hard` (Extreme) pack with tough-to-draw words — `packages/shared/src/words.ts`, `apps/api/migrations/0001_init.sql`, `apps/api/migrations/0004_expand_word_packs.sql`, `docs/handoffs/contract.md` updated.
+- [x] Fix React web hydration error (#418) caused by random identity defaults in `apps/mobile/lib/store/identity.ts` — now uses deterministic SSR-safe defaults and randomizes only after storage rehydration. Handoff: `docs/handoffs/web-hydration-fix.md`.
+- [x] Increase `MAX_PLAYERS` from 8 to 20 — `packages/shared/src/constants.ts`, `apps/api/src/db/schema.ts`, `apps/api/migrations/0001_init.sql`, test fixtures updated. Contract change logged in `docs/handoffs/contract.md`.

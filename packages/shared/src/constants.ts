@@ -8,7 +8,7 @@
 export const GAME = {
   // ---- room / players ----
   MIN_PLAYERS_TO_START: 2,
-  MAX_PLAYERS: 8,
+  MAX_PLAYERS: 20,
   MIN_NICKNAME_LEN: 1,
   MAX_NICKNAME_LEN: 16,
   MIN_ROOM_ID_LEN: 4,

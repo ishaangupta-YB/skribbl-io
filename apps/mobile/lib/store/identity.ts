@@ -21,6 +21,10 @@ export const defaultSettings: AppSettings = {
   theme: "system",
 };
 
+/** Deterministic defaults for SSR so the server and first client render match. */
+const DEFAULT_GUEST_NICKNAME = "Guest";
+const DEFAULT_GUEST_AVATAR: Avatar = { emoji: "🎨", color: "#6C5CE7" };
+
 interface IdentityState {
   nickname: string;
   avatar: Avatar;
@@ -39,8 +43,8 @@ interface IdentityState {
 export const useIdentity = create<IdentityState>()(
   persist(
     (set, get) => ({
-      nickname: randomGuestName(),
-      avatar: randomAvatar(),
+      nickname: DEFAULT_GUEST_NICKNAME,
+      avatar: DEFAULT_GUEST_AVATAR,
       settings: defaultSettings,
       hasHydrated: false,
       setNickname: (nickname) => set({ nickname }),
@@ -61,7 +65,18 @@ export const useIdentity = create<IdentityState>()(
         settings: state.settings,
       }),
       onRehydrateStorage: () => (state) => {
-        state?._setHasHydrated(true);
+        if (state) {
+          state._setHasHydrated(true);
+          // Only guests who never customized their identity get a random
+          // default; this avoids an SSR/client hydration mismatch while still
+          // giving first-time users a friendly name/avatar.
+          if (state.nickname === DEFAULT_GUEST_NICKNAME) {
+            state.setNickname(randomGuestName());
+          }
+          if (state.avatar.emoji === DEFAULT_GUEST_AVATAR.emoji && state.avatar.color === DEFAULT_GUEST_AVATAR.color) {
+            state.setAvatar(randomAvatar());
+          }
+        }
       },
     },
   ),

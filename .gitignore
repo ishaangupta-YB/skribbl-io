@@ -58,3 +58,7 @@ agents/.run/
 
 # devin CLI local session state
 .devin/
+
+# agent skills (installed by Cascade/Windsurf, not part of the codebase)
+.agents/
+skills-lock.json

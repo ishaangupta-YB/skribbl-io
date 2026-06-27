@@ -39,6 +39,7 @@ ALTER TABLE word_packs_new RENAME TO word_packs;
 
 -- 6. Re-seed bundled packs (idempotent) so a fresh/empty D1 always has them.
 INSERT OR IGNORE INTO word_packs (id, name, description, is_public, created_by) VALUES
-  ('default', 'Classic', 'Everyday objects and easy-to-draw things.', 0, NULL),
+  ('default', 'Classic', 'Everyday objects, people, places, and easy-to-draw things.', 0, NULL),
   ('animals', 'Animals', 'Creatures great and small.', 0, NULL),
-  ('food', 'Food & Drink', 'Tasty things to sketch.', 0, NULL);
+  ('food', 'Food & Drink', 'Tasty things to sketch.', 0, NULL),
+  ('hard', 'Extreme', 'Very tough concepts and things that are extremely hard to draw.', 0, NULL);

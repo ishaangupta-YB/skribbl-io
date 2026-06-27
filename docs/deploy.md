@@ -12,7 +12,7 @@
 | API backend  | Cloudflare Workers + Durable Objects | `wrangler deploy`                                   | `https://skribbl-api.<account>.workers.dev` |
 | D1 database  | Cloudflare D1                        | `wrangler d1 migrations apply skribbl`              | SQLite edge DB                              |
 | KV namespace | Cloudflare KV                        | bound in `wrangler.toml`                            | lobby cache + rate limit                    |
-| Web app      | Cloudflare Pages                     | `expo export -p web` + `wrangler pages deploy dist` | `https://skribbl-io.pages.dev`                |
+| Web app      | Cloudflare Pages                     | `expo export -p web` + `wrangler pages deploy dist` | `https://skribbl-io.pages.dev`              |
 | Mobile app   | EAS (Expo Application Services)      | `eas build --profile production`                    | TestFlight / Play internal testing          |
 
 ---
@@ -30,13 +30,13 @@
 
 Dashboard → **Workers & Pages → Create → Workers → Connect to Git** → pick the repo, production branch **`main`**:
 
-| Setting        | Value                                                                  |
-| -------------- | ---------------------------------------------------------------------- |
-| Worker name    | `skribbl-api` (must match `name` in `apps/api/wrangler.toml`)          |
-| Production branch | `main`                                                              |
-| Root directory | `apps/api`                                                             |
-| Build command  | `pnpm install --frozen-lockfile && pnpm --filter @skribbl/shared build` |
-| Deploy command | `npx wrangler d1 migrations apply skribbl --remote && npx wrangler deploy` |
+| Setting           | Value                                                                      |
+| ----------------- | -------------------------------------------------------------------------- |
+| Worker name       | `skribbl-api` (must match `name` in `apps/api/wrangler.toml`)              |
+| Production branch | `main`                                                                     |
+| Root directory    | `apps/api`                                                                 |
+| Build command     | `pnpm install --frozen-lockfile && pnpm --filter @skribbl/shared build`    |
+| Deploy command    | `npx wrangler d1 migrations apply skribbl --remote && npx wrangler deploy` |
 
 The deploy command applies D1 migrations (in order, idempotently) **before** deploying the Worker. Node 22 is auto-selected from the repo `.nvmrc`. Bindings (Durable Object, D1, KV) and `[vars]` come from `wrangler.toml` — there is nothing to configure in the dashboard for those. First deploy prints `https://skribbl-api.<account>.workers.dev`.
 
@@ -44,15 +44,15 @@ The deploy command applies D1 migrations (in order, idempotently) **before** dep
 
 Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → pick the repo, branch **`main`**:
 
-| Setting                 | Value                                                          |
-| ----------------------- | -------------------------------------------------------------- |
-| Project name            | `skribbl-cloud` (→ `https://skribbl-io.pages.dev`)               |
-| Production branch        | `main`                                                        |
-| Framework preset        | None                                                           |
-| Root directory          | `/` (repo root — required for the pnpm workspace)              |
-| Build command           | `pnpm build && pnpm --filter @skribbl/mobile run export:web`   |
-| Build output directory  | `apps/mobile/dist`                                             |
-| Environment variable    | `EXPO_PUBLIC_WS_URL = wss://skribbl-api.<account>.workers.dev` |
+| Setting                | Value                                                          |
+| ---------------------- | -------------------------------------------------------------- |
+| Project name           | `skribbl-io` (→ `https://skribbl-io.pages.dev`)                |
+| Production branch      | `main`                                                         |
+| Framework preset       | None                                                           |
+| Root directory         | `/` (repo root — required for the pnpm workspace)              |
+| Build command          | `pnpm build && pnpm --filter @skribbl/mobile run export:web`   |
+| Build output directory | `apps/mobile/dist`                                             |
+| Environment variable   | `EXPO_PUBLIC_WS_URL = wss://skribbl-api.<account>.workers.dev` |
 
 `EXPO_PUBLIC_WS_URL` is **inlined into the JS bundle at build time** — it is a public value, not a secret. Set it under the Pages project's **Settings → Variables and Secrets → Production** (and Preview if you use preview deploys), then trigger a redeploy.
 
@@ -60,7 +60,7 @@ Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → pi
 
 1. **D1:** Storage & Databases → D1 → **Create** → name `skribbl`. Copy the **Database ID** into `apps/api/wrangler.toml` `[[d1_databases]] database_id`.
 2. **KV:** Storage & Databases → KV → **Create namespace** → name `skribbl-kv`. Copy the **ID** into `wrangler.toml` `[[kv_namespaces]] id`.
-3. **Schema (automatic):** the Worker **Deploy command** runs `wrangler d1 migrations apply skribbl --remote` first, so the three migrations apply in order and are tracked in `d1_migrations` (idempotent across deploys). **Do not paste the migration SQL by hand** — the dashboard console does not enforce file order, so running `0003` before `0001` throws `Error: no such table: word_packs`.
+3. **Schema (automatic):** the Worker **Deploy command** runs `wrangler d1 migrations apply skribbl --remote` first, so the four migrations apply in order and are tracked in `d1_migrations` (idempotent across deploys). **Do not paste the migration SQL by hand** — the dashboard console does not enforce file order, so running `0003` before `0001` throws `Error: no such table: word_packs`.
 4. **If you already ran SQL by hand and hit an error,** reset the DB once in D1 → `skribbl` → **Console**, then let the next deploy re-apply cleanly:
    ```sql
    DROP TABLE IF EXISTS words;
@@ -84,7 +84,7 @@ Add a comma-separated custom domain if used. WebSocket upgrades skip CORS; REST 
 ### Order of operations
 
 1. Provision D1 + KV, paste IDs into `wrangler.toml`, commit to `main`.
-2. Connect the **Worker** to Git → deploy. The deploy command runs `wrangler d1 migrations apply skribbl --remote` first (applies all 3 migrations in order, idempotently), then `wrangler deploy`. Copy the `…workers.dev` URL.
+2. Connect the **Worker** to Git → deploy. The deploy command runs `wrangler d1 migrations apply skribbl --remote` first (applies all 4 migrations in order, idempotently), then `wrangler deploy`. Copy the `…workers.dev` URL.
 3. Connect **Pages** to Git, set `EXPO_PUBLIC_WS_URL` to `wss://…workers.dev` → deploy → copy the `…pages.dev` URL.
 4. `ALLOWED_ORIGINS` is already set to `https://skribbl-io.pages.dev` in `wrangler.toml` — the Worker deploy in step 2 picks it up automatically. If you rename the Pages project or add a custom domain, update it and redeploy.
 
@@ -152,6 +152,8 @@ The Phase 4 deploy agent renamed `apps/api/migrations/0002_word_packs_split.sql`
 
 If you have an environment that already applied the old `0002_word_packs_split.sql` (Phase 3), wrangler will try to re-apply the new `0003_word_packs_split.sql` and fail because the `word_packs`/`words` tables already exist. Before the first deploy to that environment, reconcile the remote `d1_migrations` table by either:
 
+> **Note on `0004_expand_word_packs.sql`:** this migration re-seeds the bundled `default`, `animals`, `food` packs and adds the `hard` (Extreme) pack. It is idempotent (`INSERT OR REPLACE` / `DELETE` + `INSERT OR IGNORE`) and safe to run on a live database. The next deploy will apply it automatically after the older migrations.
+
 1. Marking `0003_word_packs_split.sql` as already applied in the remote D1:
    ```sql
    INSERT INTO d1_migrations (name) VALUES ('0003_word_packs_split.sql');
@@ -176,6 +178,17 @@ npx wrangler deploy --var ALLOWED_ORIGINS:"https://skribbl-io.pages.dev,https://
 
 The Worker REST layer already validates `Origin` against this list; WebSocket upgrades are not subject to CORS.
 
+### Post-launch data updates
+
+Some deploys only change data, not schema. For example, the bundled word packs were expanded (`0004_expand_word_packs.sql`) to add more words and a new `hard` (Extreme) pack. These migrations are idempotent and safe to run on a live production D1 database:
+
+```bash
+cd apps/api
+npx wrangler d1 migrations apply skribbl --remote
+```
+
+Because the Worker **Deploy command** also runs this step before `wrangler deploy`, a normal Git push to `main` will apply data-only migrations automatically. Custom host-created word packs are never affected by re-seeding.
+
 ---
 
 ## 3. Deploy the web app to Cloudflare Pages
@@ -190,7 +203,7 @@ export EXPO_PUBLIC_WS_URL=wss://skribbl-api.<your-account>.workers.dev
 npx expo export -p web
 
 # Deploy the dist/ folder to Cloudflare Pages
-npx wrangler pages deploy dist --project-name skribbl-cloud
+npx wrangler pages deploy dist --project-name skribbl-io
 ```
 
 After the first deploy, the Pages dashboard will show the URL, e.g.:
@@ -199,14 +212,16 @@ After the first deploy, the Pages dashboard will show the URL, e.g.:
 https://skribbl-io.pages.dev
 ```
 
-### Build settings (if connecting an external Git repo to Pages)
+### Manual CLI fallback (not the primary deploy path)
+
+If you ever need to deploy the web app from your local machine instead of the Cloudflare dashboard Git integration, use these settings:
 
 - **Build command:** `cd apps/mobile && npx expo export -p web`
 - **Build output directory:** `apps/mobile/dist`
 - **Root directory:** `/` (repo root)
 - **Environment variable:** `EXPO_PUBLIC_WS_URL=wss://skribbl-api.<your-account>.workers.dev`
 
-The GitHub Actions workflow in this repo performs the same export + `wrangler pages deploy` automatically on every merge to `main`.
+The GitHub Actions workflow in `.github/workflows/deploy.yml` is a **manual-only fallback** (`workflow_dispatch`). It does **not** run on push to `main`; production deploys are handled by the Cloudflare dashboard Git integration described above.
 
 ---
 
@@ -216,11 +231,15 @@ The GitHub Actions workflow in this repo performs the same export + `wrangler pa
 
 1. Create the project on EAS:
 
-```bash
-cd apps/mobile
-npx eas init
-# This writes the real projectId into app.json.
-```
+   > **Do not skip this step.** `apps/mobile/app.json` currently contains a placeholder EAS projectId (`00000000-0000-0000-0000-000000000000`). Mobile builds will fail until it is replaced with the real project ID.
+
+   ```bash
+   cd apps/mobile
+   npx eas init
+   # This writes the real projectId into app.json.
+   ```
+
+   Verify the placeholder was replaced: `grep -A2 '"eas"' app.json | grep -v '00000000-0000-0000-0000-000000000000'`.
 
 2. Configure the production backend URL in `eas.json`:
 
@@ -303,13 +322,14 @@ Three workflows live in `.github/workflows/`:
 
 ## 9. Troubleshooting
 
-| Symptom                           | Fix                                                                               |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| `database_id not found` on deploy | Paste the real D1 id from `wrangler d1 create skribbl` into `wrangler.toml`.      |
-| `kv_namespace not found`          | Paste the real KV id from `wrangler kv namespace create skribbl-kv`.              |
-| Web can’t connect to Worker       | Check `ALLOWED_ORIGINS` matches the Pages origin and the URL uses `wss://`.       |
-| Mobile build can’t connect        | Verify `EXPO_PUBLIC_WS_URL` in `eas.json` and the EAS build env.                  |
-| D1 tables missing                 | Run `npx wrangler d1 migrations apply skribbl` before or after the Worker deploy. |
+| Symptom                           | Fix                                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| `database_id not found` on deploy | Paste the real D1 id from `wrangler d1 create skribbl` into `wrangler.toml`.        |
+| `kv_namespace not found`          | Paste the real KV id from `wrangler kv namespace create skribbl-kv`.                |
+| Web can’t connect to Worker       | Check `ALLOWED_ORIGINS` matches the Pages origin and the URL uses `wss://`.         |
+| Mobile build can’t connect        | Verify `EXPO_PUBLIC_WS_URL` in `eas.json` and the EAS build env.                    |
+| D1 tables missing                 | Run `npx wrangler d1 migrations apply skribbl` before or after the Worker deploy.   |
+| Web app calls wrong Worker URL    | Check the Cloudflare Pages project env var `EXPO_PUBLIC_WS_URL` and redeploy Pages. |
 
 ---
 

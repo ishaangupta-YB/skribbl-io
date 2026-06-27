@@ -96,7 +96,7 @@ describe("RoomConnection — frame validation", () => {
         roomId: "ROOM",
         phase: "lobby",
         settings: {
-          maxPlayers: 8,
+          maxPlayers: 20,
           maxRounds: 3,
           roundDurationSec: 70,
           wordPackIds: ["default"],
