@@ -19,7 +19,7 @@ export function ConnectionBanner({ status }: { status: ConnectionStatus }): Reac
   const color = status === "closed" ? theme.colors.danger : theme.colors.warning;
   return (
     <View style={{ backgroundColor: color, paddingVertical: theme.spacing(1), alignItems: "center" }}>
-      <Txt variant="caption" color="#0F1226" weight="800">
+      <Txt variant="caption" color={theme.colors.text} weight="800">
         {message}
       </Txt>
     </View>

@@ -44,7 +44,7 @@ export function Sheet({
         <Animated.View
           entering={FadeIn.duration(160)}
           exiting={FadeOut.duration(160)}
-          style={{ position: "absolute", inset: 0, backgroundColor: "rgba(2,6,23,0.6)" }}
+          style={{ position: "absolute", inset: 0, backgroundColor: "rgba(26,29,42,0.5)" }}
         >
           <Pressable accessibilityLabel="Close" className="flex-1" onPress={onClose} />
         </Animated.View>
@@ -56,7 +56,7 @@ export function Sheet({
         >
           <View
             className={cn(
-              "border border-border bg-card p-5",
+              "border border-border bg-card p-5 shadow-card",
               isSheet ? "rounded-t-3xl pb-8" : "rounded-3xl",
               className,
             )}

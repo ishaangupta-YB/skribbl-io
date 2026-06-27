@@ -16,6 +16,8 @@
     "test": "vitest run --config features/game/vitest.config.ts && vitest run --config vitest.qa.config.ts"
   },
   "dependencies": {
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
+    "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@shopify/react-native-skia": "2.6.2",
     "@skribbl/shared": "workspace:*",

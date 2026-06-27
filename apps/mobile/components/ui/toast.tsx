@@ -42,8 +42,8 @@ const ToastContext = createContext<ToastApi | null>(null);
 const ACCENT: Record<ToastVariant, string> = {
   default: "border-l-muted-foreground",
   success: "border-l-success",
-  danger: "border-l-danger",
-  warning: "border-l-warning",
+  danger: "border-l-coral",
+  warning: "border-l-coral",
   info: "border-l-primary",
 };
 

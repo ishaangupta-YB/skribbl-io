@@ -11,7 +11,7 @@ export function Card({ className, flush = false, ...props }: CardProps) {
   return (
     <View
       className={cn(
-        "rounded-2xl border border-border bg-card",
+        "rounded-2xl border border-border bg-card shadow-card",
         !flush && "p-4",
         className,
       )}

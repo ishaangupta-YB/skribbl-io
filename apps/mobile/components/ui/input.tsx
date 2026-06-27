@@ -36,9 +36,9 @@ export function Input({
       {label ? <Text variant="label">{label}</Text> : null}
       <View
         className={cn(
-          "h-12 flex-row items-center rounded-2xl border bg-card px-3.5",
+          "h-12 flex-row items-center rounded-xl border-2 bg-secondary px-3.5",
           focused ? "border-primary" : "border-input",
-          error && "border-danger",
+          error && "border-coral",
         )}
       >
         {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}
@@ -60,7 +60,7 @@ export function Input({
         {rightIcon ? <View className="ml-2">{rightIcon}</View> : null}
       </View>
       {error ? (
-        <Text className="text-xs font-medium text-danger">{error}</Text>
+        <Text className="text-xs font-medium text-coral">{error}</Text>
       ) : hint ? (
         <Text className="text-xs text-muted-foreground">{hint}</Text>
       ) : null}

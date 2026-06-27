@@ -55,7 +55,7 @@ export interface GameTheme {
     xxl: number;
     weightRegular: "400";
     weightMedium: "600";
-    weightBold: "800";
+    weightBold: "700" | "800";
     /** Optional custom families; falls back to system. */
     family?: string;
     familyDisplay?: string;

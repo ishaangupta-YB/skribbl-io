@@ -92,7 +92,7 @@ function WinnerCard({
 
   return (
     <Animated.View style={[{ alignItems: "center", gap: theme.spacing(2) }, animatedStyle]}>
-      <AvatarBubble emoji={winner.avatar.emoji} color={winner.avatar.color} size={96} ring={theme.colors.warning} />
+      <AvatarBubble emoji={winner.avatar.emoji} color={winner.avatar.color} size={96} ring={theme.colors.primary} />
       <Txt variant="display" weight="800" color={theme.colors.warning} align="center">
         {youWon ? "You win! 🎉" : `${winner.nickname} wins!`}
       </Txt>

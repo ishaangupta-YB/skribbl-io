@@ -10,7 +10,7 @@ export type TextVariant =
   | "label";
 
 const VARIANTS: Record<TextVariant, string> = {
-  display: "text-4xl font-extrabold tracking-tight text-foreground",
+  display: "text-4xl font-bold tracking-tight text-foreground",
   title: "text-2xl font-bold tracking-tight text-foreground",
   subtitle: "text-lg font-semibold text-foreground",
   body: "text-base text-foreground",

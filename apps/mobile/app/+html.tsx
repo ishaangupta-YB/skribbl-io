@@ -13,6 +13,19 @@ export default function Root({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <ScrollViewStyleReset />
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
         <style dangerouslySetInnerHTML={{ __html: rootStyle }} />
       </head>
       <body>{children}</body>
@@ -22,8 +35,12 @@ export default function Root({ children }: PropsWithChildren) {
 
 const rootStyle = `
   html, body { height: 100%; }
-  body { background-color: #FBFBFE; overflow: hidden; }
+  body {
+    background-color: #F8F6EE;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
   @media (prefers-color-scheme: dark) {
-    body { background-color: #0B1020; }
+    body { background-color: #232321; }
   }
 `;

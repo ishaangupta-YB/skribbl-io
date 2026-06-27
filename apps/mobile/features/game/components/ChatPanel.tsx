@@ -99,7 +99,7 @@ export function ChatPanel({
           exiting={FadeOutDown.duration(180)}
           style={{ backgroundColor: theme.colors.close, paddingVertical: theme.spacing(1), alignItems: "center" }}
         >
-          <Txt variant="caption" color="#1A1D2E" weight="800">
+          <Txt variant="caption" color={theme.colors.text} weight="800">
             ✨ {closeFeedback.text}
           </Txt>
         </Animated.View>
@@ -188,7 +188,7 @@ function PillChatRow({
         paddingVertical: theme.spacing(1),
       }}
     >
-      <Txt variant="caption" color="#0F1226" weight="800">
+      <Txt variant="caption" color={theme.colors.text} weight="800">
         {message.kind === "correct" ? "✅ " : "✨ "}
         {message.text}
       </Txt>

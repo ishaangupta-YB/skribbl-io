@@ -18,14 +18,25 @@ WEB_PORT=8081
 
 export EXPO_PUBLIC_WS_URL="${EXPO_PUBLIC_WS_URL:-ws://localhost:$PORT}"
 
+# ---- CORS override for local Playwright browser (http://localhost:8081) ----
+# wrangler.toml hardcodes the production origin; we inject a temporary .dev.vars
+# so the CI web server can call the local API without CORS blocking POST.
+DEV_VARS="$API_DIR/.dev.vars"
+PROD_ORIGINS="https://skribbl-io.pages.dev"
+DEV_VARS_ORIGINS="${DEV_VARS_ORIGINS:-$PROD_ORIGINS,http://localhost:$WEB_PORT}"
+
 # ---- cleanup ----
 pids=()
 cleanup() {
   for p in "${pids[@]}"; do
     kill "$p" 2>/dev/null || true
   done
+  rm -f "$DEV_VARS"
 }
 trap cleanup EXIT
+
+# Write the temporary vars override before wrangler dev starts.
+echo "ALLOWED_ORIGINS = \"$DEV_VARS_ORIGINS\"" > "$DEV_VARS"
 
 # ---- build shared + web client ----
 echo "[playwright-ci] building shared + web client"

@@ -38,8 +38,8 @@ export function IconButton({
       accessibilityRole="button"
       disabled={disabled}
       style={({ pressed }) => ({
-        transform: [{ scale: pressed ? 0.94 : 1 }],
-        opacity: pressed ? 0.9 : 1,
+        transform: [{ translateY: pressed ? 2 : 0 }],
+        opacity: pressed ? 0.88 : 1,
       })}
       className={cn(
         "items-center justify-center",

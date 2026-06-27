@@ -33,15 +33,15 @@ const stubStyles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: "#FCFAF4",
+    borderRadius: 20,
     borderWidth: 2,
-    borderColor: "#E2E5F0",
+    borderColor: "#E8E4D0",
     borderStyle: "dashed",
   },
   canvasEmoji: { fontSize: 40 },
-  canvasText: { marginTop: 8, fontSize: 15, fontWeight: "600", color: "#6B708F" },
-  canvasHint: { marginTop: 2, fontSize: 12, color: "#9AA0C9" },
+  canvasText: { marginTop: 8, fontSize: 15, fontWeight: "600", color: "#7A7664" },
+  canvasHint: { marginTop: 2, fontSize: 12, color: "#A8A291" },
 });
 
 /* ------------------------------------------------------------------ *

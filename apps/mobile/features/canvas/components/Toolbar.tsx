@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { useTheme } from "@/theme";
 import { BRUSH_SIZES, PALETTE } from "../constants";
 import type { DrawMode } from "../lib/strokeBatcher";
 
@@ -17,12 +18,6 @@ export interface ToolbarProps {
   style?: ViewStyle;
 }
 
-/**
- * Minimal, unopinionated drawing toolbar: color swatches, brush sizes, eraser
- * toggle, undo, and clear. Styled with plain primitives so Agent B can swap in
- * the design system / lucide icons later (see canvas-integration handoff).
- * Only shown to the active drawer.
- */
 export function Toolbar({
   color,
   width,
@@ -36,6 +31,65 @@ export function Toolbar({
   brushSizes = BRUSH_SIZES,
   style,
 }: ToolbarProps): React.ReactElement {
+  const { colors } = useTheme();
+
+  const dynamicStyles = StyleSheet.create({
+    bar: {
+      gap: 8,
+      padding: 8,
+      backgroundColor: colors.card,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    swatch: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.mutedForeground,
+    },
+    swatchSelected: {
+      borderWidth: 3,
+      borderColor: colors.foreground,
+    },
+    sizeButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.secondary,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    sizeButtonSelected: {
+      borderColor: colors.foreground,
+      borderWidth: 2,
+    },
+    actionButton: {
+      paddingHorizontal: 12,
+      height: 40,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.secondary,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    actionButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    actionLabel: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.foreground,
+    },
+    brushDot: {
+      backgroundColor: colors.foreground,
+    },
+  });
+
   const renderSwatch = useCallback(
     ({ item: swatch }: { item: string }) => {
       const selected = mode === "draw" && swatch.toLowerCase() === color.toLowerCase();
@@ -44,15 +98,15 @@ export function Toolbar({
           accessibilityRole="button"
           accessibilityLabel={`color ${swatch}`}
           onPress={() => onSelectColor(swatch)}
-          style={[styles.swatch, { backgroundColor: swatch }, selected && styles.swatchSelected]}
+          style={[dynamicStyles.swatch, { backgroundColor: swatch }, selected && dynamicStyles.swatchSelected]}
         />
       );
     },
-    [mode, color, onSelectColor],
+    [mode, color, onSelectColor, dynamicStyles],
   );
 
   return (
-    <View style={[styles.bar, style]}>
+    <View style={[dynamicStyles.bar, style]}>
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -71,14 +125,14 @@ export function Toolbar({
               accessibilityRole="button"
               accessibilityLabel={`brush size ${size}`}
               onPress={() => onSelectWidth(size)}
-              style={[styles.sizeButton, selected && styles.sizeButtonSelected]}
+              style={[dynamicStyles.sizeButton, selected && dynamicStyles.sizeButtonSelected]}
             >
               <View
                 style={{
                   width: Math.min(size, 28),
                   height: Math.min(size, 28),
                   borderRadius: Math.min(size, 28) / 2,
-                  backgroundColor: "#111827",
+                  backgroundColor: colors.foreground,
                 }}
               />
             </Pressable>
@@ -89,25 +143,25 @@ export function Toolbar({
           accessibilityRole="button"
           accessibilityLabel="eraser"
           onPress={onToggleEraser}
-          style={[styles.actionButton, mode === "erase" && styles.actionButtonActive]}
+          style={[dynamicStyles.actionButton, mode === "erase" && dynamicStyles.actionButtonActive]}
         >
-          <Text style={styles.actionLabel}>Erase</Text>
+          <Text style={dynamicStyles.actionLabel}>Erase</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="undo"
           onPress={onUndo}
-          style={styles.actionButton}
+          style={dynamicStyles.actionButton}
         >
-          <Text style={styles.actionLabel}>Undo</Text>
+          <Text style={dynamicStyles.actionLabel}>Undo</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="clear canvas"
           onPress={onClear}
-          style={styles.actionButton}
+          style={dynamicStyles.actionButton}
         >
-          <Text style={styles.actionLabel}>Clear</Text>
+          <Text style={dynamicStyles.actionLabel}>Clear</Text>
         </Pressable>
       </View>
     </View>
@@ -115,60 +169,9 @@ export function Toolbar({
 }
 
 const styles = StyleSheet.create({
-  bar: {
-    gap: 8,
-    padding: 8,
-    backgroundColor: "#F9FAFB",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E5E7EB",
-  },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-  },
-  swatch: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#9CA3AF",
-  },
-  swatchSelected: {
-    borderWidth: 3,
-    borderColor: "#111827",
-  },
-  sizeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#D1D5DB",
-  },
-  sizeButtonSelected: {
-    borderColor: "#111827",
-    borderWidth: 2,
-  },
-  actionButton: {
-    paddingHorizontal: 12,
-    height: 40,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#D1D5DB",
-  },
-  actionButtonActive: {
-    backgroundColor: "#FDE68A",
-    borderColor: "#D97706",
-  },
-  actionLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#111827",
   },
 });

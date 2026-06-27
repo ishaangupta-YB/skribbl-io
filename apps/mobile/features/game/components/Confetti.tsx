@@ -11,7 +11,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const COLORS = ["#6C5CE7", "#00D2D3", "#FECA57", "#FF6B6B", "#2ECC71", "#54A0FF", "#EC4899"];
+const COLORS = ["#F5D547", "#2BA8D8", "#E8554F", "#5EC891", "#B085E0", "#F97316"];
 
 interface Piece {
   id: string;

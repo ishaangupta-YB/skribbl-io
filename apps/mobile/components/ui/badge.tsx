@@ -16,8 +16,8 @@ const CONTAINER: Record<BadgeVariant, string> = {
   primary: "bg-primary",
   accent: "bg-accent",
   success: "bg-success",
-  warning: "bg-warning",
-  danger: "bg-danger",
+  warning: "bg-coral",
+  danger: "bg-coral",
   outline: "border border-border bg-transparent",
 };
 
@@ -26,8 +26,8 @@ const LABEL: Record<BadgeVariant, string> = {
   primary: "text-primary-foreground",
   accent: "text-accent-foreground",
   success: "text-success-foreground",
-  warning: "text-warning-foreground",
-  danger: "text-danger-foreground",
+  warning: "text-coral-foreground",
+  danger: "text-coral-foreground",
   outline: "text-foreground",
 };
 

@@ -133,7 +133,7 @@ export function CreatePackSheet({ visible, onClose, nickname, onCreated }: Creat
           value={isPublic}
           onValueChange={(value) => dispatch({ type: "patch", patch: { isPublic: value } })}
         />
-        {error ? <Text className="text-xs text-danger">{error}</Text> : null}
+        {error ? <Text className="text-xs text-coral">{error}</Text> : null}
         <Button label={saving ? "Saving…" : "Save pack"} disabled={saving} onPress={onSave} />
       </View>
     </Sheet>

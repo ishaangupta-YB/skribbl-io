@@ -37,9 +37,9 @@ export function TextArea({
       {label ? <Text variant="label">{label}</Text> : null}
       <View
         className={cn(
-          "min-h-[96px] flex-row rounded-2xl border bg-card px-3.5 py-3",
+          "min-h-[96px] flex-row rounded-xl border-2 bg-secondary px-3.5 py-3",
           focused ? "border-primary" : "border-input",
-          error && "border-danger",
+          error && "border-coral",
         )}
       >
         {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}
@@ -63,7 +63,7 @@ export function TextArea({
         />
       </View>
       {error ? (
-        <Text className="text-xs font-medium text-danger">{error}</Text>
+        <Text className="text-xs font-medium text-coral">{error}</Text>
       ) : hint ? (
         <Text className="text-xs text-muted-foreground">{hint}</Text>
       ) : null}

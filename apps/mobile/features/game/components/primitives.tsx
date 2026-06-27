@@ -33,7 +33,7 @@ export function Txt({
   children: React.ReactNode;
   variant?: TxtVariant;
   color?: string;
-  weight?: "400" | "600" | "800";
+  weight?: "400" | "600" | "700" | "800";
   align?: TextStyle["textAlign"];
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
@@ -137,14 +137,14 @@ export function Button({
 }): React.JSX.Element {
   const theme = useTheme();
   const haptics = useHaptics();
-  const scale = useSharedValue(1);
+  const scale = useSharedValue(0);
 
   const { bg, fg, border } = buttonColors(theme, variant, disabled);
 
   const press = (to: number) => {
     scale.value = withSpring(to, { damping: 15, stiffness: 400 });
   };
-  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ translateY: scale.value }] }));
 
   const buttonStyle = useMemo(
     () => ({
@@ -173,10 +173,10 @@ export function Button({
         onPressIn={() => {
           if (!disabled) {
             haptics.selection();
-            press(0.96);
+            press(2);
           }
         }}
-        onPressOut={() => press(1)}
+        onPressOut={() => press(0)}
         onPress={() => {
           if (!disabled) onPress();
         }}
@@ -199,7 +199,7 @@ function buttonColors(
     case "ghost":
       return { bg: "transparent", fg: colors.text, border: colors.border };
     case "danger":
-      return { bg: colors.danger, fg: "#FFFFFF" };
+      return { bg: colors.danger, fg: colors.textInverse };
     case "accent":
       return { bg: colors.accent, fg: colors.textInverse };
     case "primary":
@@ -227,7 +227,7 @@ export function Badge({
         paddingVertical: 2,
       }}
     >
-      <Text style={{ color: textColor ?? "#FFFFFF", fontSize: theme.font.xs, fontWeight: theme.font.weightBold }}>
+      <Text style={{ color: textColor ?? theme.colors.textInverse, fontSize: theme.font.xs, fontWeight: theme.font.weightBold }}>
         {label}
       </Text>
     </View>

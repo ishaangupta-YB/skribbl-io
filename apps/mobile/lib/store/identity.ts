@@ -23,7 +23,7 @@ export const defaultSettings: AppSettings = {
 
 /** Deterministic defaults for SSR so the server and first client render match. */
 const DEFAULT_GUEST_NICKNAME = "Guest";
-const DEFAULT_GUEST_AVATAR: Avatar = { emoji: "🎨", color: "#6C5CE7" };
+const DEFAULT_GUEST_AVATAR: Avatar = { emoji: "🎨", color: "#F5D547" };
 
 interface IdentityState {
   nickname: string;

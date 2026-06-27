@@ -31,7 +31,7 @@ export function SwitchRow({
         value={value}
         onValueChange={onValueChange}
         trackColor={{ false: colors.input, true: colors.primary }}
-        thumbColor="#FFFFFF"
+        thumbColor={colors.card}
         ios_backgroundColor={colors.input}
       />
     </View>

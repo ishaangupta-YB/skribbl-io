@@ -61,6 +61,14 @@ module.exports = {
           DEFAULT: colorToken("danger"),
           foreground: colorToken("danger-foreground"),
         },
+        coral: {
+          DEFAULT: colorToken("coral"),
+          foreground: colorToken("coral-foreground"),
+        },
+        lavender: {
+          DEFAULT: colorToken("lavender"),
+          foreground: colorToken("lavender-foreground"),
+        },
         border: colorToken("border"),
         input: colorToken("input"),
         ring: colorToken("ring"),
@@ -75,9 +83,9 @@ module.exports = {
         "3xl": "36px",
       },
       fontFamily: {
-        sans: ["System", "ui-sans-serif", "sans-serif"],
-        display: ["System", "ui-sans-serif", "sans-serif"],
-        mono: ["ui-monospace", "SFMono-Regular", "monospace"],
+        sans: ["Plus Jakarta Sans", "System", "ui-sans-serif", "sans-serif"],
+        display: ["Plus Jakarta Sans", "System", "ui-sans-serif", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       fontSize: {
         xs: ["12px", { lineHeight: "16px" }],
@@ -95,7 +103,9 @@ module.exports = {
         22: "88px",
       },
       boxShadow: {
-        card: "0 8px 30px rgb(0 0 0 / 0.08)",
+        card: "0 12px 32px -16px rgb(26 29 42 / 0.12)",
+        "card-hover": "0 16px 40px -12px rgb(26 29 42 / 0.18)",
+        push: "0 4px 0 0 rgb(26 29 42 / 0.15)",
       },
     },
   },

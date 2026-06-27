@@ -81,7 +81,7 @@ export default function LobbyScreen() {
       <View className="gap-5 pt-2">
         <Card className="items-center gap-3">
           <Text variant="caption">Room code</Text>
-          <Text className="text-4xl font-extrabold tracking-[6px] text-foreground">{roomId}</Text>
+          <Text className="text-4xl font-bold tracking-[6px] text-foreground font-mono">{roomId}</Text>
           <View className="flex-row gap-2">
             <Button
               variant="secondary"

@@ -16,7 +16,7 @@ import type { GameTheme } from "./integration/contracts";
 import type { Identity } from "./state/types";
 
 const GUEST_EMOJIS = ["🦊", "🐼", "🐸", "🐙", "🦄", "🐯", "🐧", "🐵"];
-const GUEST_COLORS = ["#6C5CE7", "#EC4899", "#10B981", "#F59E0B", "#3478F6", "#EF4444"];
+const GUEST_COLORS = ["#F5D547", "#2BA8D8", "#E8554F", "#5EC891", "#B085E0", "#F97316"];
 
 function randomGuest(): Identity {
   const emoji = GUEST_EMOJIS[Math.floor(Math.random() * GUEST_EMOJIS.length)] as string;

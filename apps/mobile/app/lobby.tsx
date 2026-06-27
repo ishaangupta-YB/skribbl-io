@@ -131,8 +131,8 @@ export default function LobbyBrowserScreen() {
       <AppHeader title="Public lobby" back />
 
       {error && !isLoading ? (
-        <Card className="my-4 gap-3 border-danger">
-          <Text className="text-danger">{error}</Text>
+        <Card className="my-4 gap-3 border-coral">
+          <Text className="text-coral">{error}</Text>
           <Button variant="secondary" label="Try again" onPress={refresh} />
         </Card>
       ) : null}

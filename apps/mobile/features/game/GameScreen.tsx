@@ -137,7 +137,7 @@ function ErrorBanner({ error, theme }: { error: RoomError; theme: GameTheme }): 
         borderRadius: theme.radius.md,
       }}
     >
-      <Txt variant="caption" color="#FFFFFF" weight="800">
+      <Txt variant="caption" color={theme.colors.textInverse} weight="800">
         {error.message}
       </Txt>
     </View>

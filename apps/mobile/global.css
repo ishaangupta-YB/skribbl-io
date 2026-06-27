@@ -3,80 +3,93 @@
 @tailwind utilities;
 
 /*
- * Design tokens. Values are space-separated RGB channels so Tailwind can apply
- * opacity via `rgb(var(--token) / <alpha-value>)`. `:root` = light theme,
- * `.dark` = dark theme (NativeWind toggles the class from the active scheme).
+ * Hallmark · Hum theme · playful
+ * Cream paper, multi-accent (pear-yellow, sky-cyan, coral-red, mint, lavender).
+ * Values are space-separated RGB channels so Tailwind can apply opacity via
+ * `rgb(var(--token) / <alpha-value>)`. `:root` = light, `.dark` = dark variant.
  */
 @layer base {
   :root {
-    --background: 251 251 254;
-    --foreground: 20 22 46;
+    --background: 248 246 238;
+    --foreground: 26 29 42;
 
-    --card: 255 255 255;
-    --card-foreground: 20 22 46;
+    --card: 252 250 244;
+    --card-foreground: 26 29 42;
 
-    --popover: 255 255 255;
-    --popover-foreground: 20 22 46;
+    --popover: 252 250 244;
+    --popover-foreground: 26 29 42;
 
-    --primary: 91 91 214;
-    --primary-foreground: 255 255 255;
+    --primary: 245 213 71;
+    --primary-foreground: 26 29 42;
 
-    --secondary: 241 241 250;
-    --secondary-foreground: 42 44 74;
+    --secondary: 240 237 223;
+    --secondary-foreground: 42 44 55;
 
-    --accent: 236 72 153;
+    --accent: 43 168 216;
     --accent-foreground: 255 255 255;
 
-    --muted: 239 239 246;
-    --muted-foreground: 107 110 132;
+    --coral: 232 85 79;
+    --coral-foreground: 255 255 255;
 
-    --success: 22 163 74;
-    --success-foreground: 255 255 255;
+    --lavender: 176 133 224;
+    --lavender-foreground: 255 255 255;
 
-    --warning: 245 158 11;
-    --warning-foreground: 36 24 0;
+    --muted: 240 237 223;
+    --muted-foreground: 122 118 100;
 
-    --danger: 239 68 68;
+    --success: 94 200 145;
+    --success-foreground: 26 29 42;
+
+    --warning: 232 85 79;
+    --warning-foreground: 255 255 255;
+
+    --danger: 232 85 79;
     --danger-foreground: 255 255 255;
 
-    --border: 227 227 238;
-    --input: 227 227 238;
-    --ring: 91 91 214;
+    --border: 232 228 208;
+    --input: 232 228 208;
+    --ring: 245 213 71;
   }
 
   .dark {
-    --background: 11 16 32;
-    --foreground: 236 238 247;
+    --background: 35 35 33;
+    --foreground: 237 233 220;
 
-    --card: 20 26 46;
-    --card-foreground: 236 238 247;
+    --card: 44 43 40;
+    --card-foreground: 237 233 220;
 
-    --popover: 20 26 46;
-    --popover-foreground: 236 238 247;
+    --popover: 44 43 40;
+    --popover-foreground: 237 233 220;
 
-    --primary: 139 139 240;
-    --primary-foreground: 11 16 32;
+    --primary: 232 201 58;
+    --primary-foreground: 35 35 33;
 
-    --secondary: 30 39 64;
-    --secondary-foreground: 236 238 247;
+    --secondary: 53 51 48;
+    --secondary-foreground: 237 233 220;
 
-    --accent: 244 114 182;
-    --accent-foreground: 11 16 32;
+    --accent: 58 155 208;
+    --accent-foreground: 255 255 255;
 
-    --muted: 30 39 64;
-    --muted-foreground: 154 160 184;
+    --coral: 217 75 69;
+    --coral-foreground: 255 255 255;
 
-    --success: 34 197 94;
-    --success-foreground: 5 24 13;
+    --lavender: 154 119 204;
+    --lavender-foreground: 255 255 255;
 
-    --warning: 251 191 36;
-    --warning-foreground: 36 24 0;
+    --muted: 53 51 48;
+    --muted-foreground: 168 162 145;
 
-    --danger: 248 113 113;
-    --danger-foreground: 26 6 6;
+    --success: 82 181 128;
+    --success-foreground: 35 35 33;
 
-    --border: 40 48 77;
-    --input: 40 48 77;
-    --ring: 139 139 240;
+    --warning: 217 75 69;
+    --warning-foreground: 255 255 255;
+
+    --danger: 217 75 69;
+    --danger-foreground: 255 255 255;
+
+    --border: 67 64 58;
+    --input: 67 64 58;
+    --ring: 232 201 58;
   }
 }

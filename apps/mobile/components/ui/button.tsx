@@ -18,9 +18,9 @@ const CONTAINER: Record<ButtonVariant, string> = {
   primary: "bg-primary",
   secondary: "bg-secondary",
   accent: "bg-accent",
-  outline: "border border-border bg-transparent",
+  outline: "border-2 border-border bg-transparent",
   ghost: "bg-transparent",
-  danger: "bg-danger",
+  danger: "bg-coral",
 };
 
 const LABEL: Record<ButtonVariant, string> = {
@@ -29,11 +29,11 @@ const LABEL: Record<ButtonVariant, string> = {
   accent: "text-accent-foreground",
   outline: "text-foreground",
   ghost: "text-foreground",
-  danger: "text-danger-foreground",
+  danger: "text-coral-foreground",
 };
 
 const SIZE: Record<ButtonSize, string> = {
-  sm: "h-9 px-3 rounded-xl",
+  sm: "h-9 px-3.5 rounded-xl",
   md: "h-12 px-5 rounded-2xl",
   lg: "h-14 px-6 rounded-2xl",
 };
@@ -87,8 +87,8 @@ export function Button({
       accessibilityRole="button"
       disabled={isDisabled}
       style={({ pressed }) => ({
-        transform: [{ scale: pressed ? 0.97 : 1 }],
-        opacity: pressed ? 0.92 : 1,
+        transform: [{ translateY: pressed ? 2 : 0 }],
+        opacity: pressed ? 0.9 : 1,
       })}
       className={cn(
         "flex-row items-center justify-center gap-2",

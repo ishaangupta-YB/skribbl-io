@@ -9,6 +9,19 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { colorScheme as nativewindColorScheme } from "nativewind";
+import {
+  useFonts,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from "@expo-google-fonts/plus-jakarta-sans";
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_500Medium,
+  JetBrainsMono_700Bold,
+} from "@expo-google-fonts/jetbrains-mono";
 import { ToastProvider } from "@/components/ui";
 import { useIdentity } from "@/lib/store";
 import { darkColors, lightColors } from "@/theme";
@@ -22,14 +35,25 @@ export default function RootLayout() {
   const resolved = themePref === "system" ? (systemScheme === "dark" ? "dark" : "light") : themePref;
   const isDark = resolved === "dark";
 
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+    JetBrainsMono_400Regular,
+    JetBrainsMono_500Medium,
+    JetBrainsMono_700Bold,
+  });
+
   // Keep NativeWind's active scheme in sync with the persisted preference.
   useEffect(() => {
     nativewindColorScheme.set(resolved);
   }, [resolved]);
 
   useEffect(() => {
-    if (hasHydrated) void SplashScreen.hideAsync().catch(() => undefined);
-  }, [hasHydrated]);
+    if (hasHydrated && fontsLoaded) void SplashScreen.hideAsync().catch(() => undefined);
+  }, [hasHydrated, fontsLoaded]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

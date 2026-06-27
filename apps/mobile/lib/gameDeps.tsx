@@ -56,7 +56,7 @@ function useGameTheme(): GameTheme {
     () => ({
       isDark,
       spacing: (steps: number) => steps * 4,
-      radius: { sm: 6, md: 10, lg: 16, xl: 24, pill: 999 },
+      radius: { sm: 8, md: 12, lg: 20, xl: 24, pill: 999 },
       font: {
         xs: 11,
         sm: 13,
@@ -66,7 +66,7 @@ function useGameTheme(): GameTheme {
         xxl: 34,
         weightRegular: "400",
         weightMedium: "600",
-        weightBold: "800",
+        weightBold: "700",
       },
       colors: {
         background: colors.background,
@@ -87,7 +87,7 @@ function useGameTheme(): GameTheme {
         correct: colors.success,
         close: colors.warning,
         system: colors.mutedForeground,
-        overlay: isDark ? "rgba(4, 6, 16, 0.72)" : "rgba(20, 22, 40, 0.5)",
+        overlay: isDark ? "rgba(35, 35, 33, 0.72)" : "rgba(26, 29, 42, 0.5)",
       },
     }),
     [colors, isDark],

@@ -1,6 +1,15 @@
-import { View } from "react-native";
+import { useEffect } from "react";
+import { Linking, Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { Globe, LogIn, Plus, Settings as SettingsIcon } from "lucide-react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 import { useTheme } from "@/theme";
 import { useIdentity } from "@/lib/store";
 import {
@@ -12,6 +21,53 @@ import {
   Screen,
   Text,
 } from "@/components";
+
+function CharacterMark() {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(0.7);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.04, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      false,
+    );
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.9, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.7, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      false,
+    );
+  }, [scale, opacity]);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: "absolute",
+          top: -16,
+          right: -8,
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: "#F5D547",
+        },
+        style,
+      ]}
+      pointerEvents="none"
+    />
+  );
+}
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -33,7 +89,10 @@ export default function HomeScreen() {
 
       <View className="flex-1 justify-center gap-8 py-6">
         <View className="items-center gap-3">
-          <Brand size="lg" />
+          <View className="relative">
+            <CharacterMark />
+            <Brand size="lg" />
+          </View>
           <Text className="text-center text-base text-muted-foreground">
             Draw, guess, and out-sketch your friends in real time.
           </Text>
@@ -83,8 +142,13 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View className="items-center pb-2">
-        <Text className="text-xs text-muted-foreground">Draw • Guess • Win</Text>
+      <View className="items-center gap-1 pb-2">
+        <Text className="text-xs text-muted-foreground font-mono">Draw • Guess • Win</Text>
+        <Pressable onPress={() => Linking.openURL("https://ishaangupta.tech")}>
+          <Text className="text-xs text-muted-foreground">
+            Made by <Text className="text-xs font-semibold text-accent">Ishaan Gupta</Text>
+          </Text>
+        </Pressable>
       </View>
     </Screen>
   );

@@ -47,7 +47,7 @@ export function Avatar({
       </View>
       {isHost ? (
         <View
-          className="absolute -right-1 -top-1.5 h-5 w-5 items-center justify-center rounded-full bg-warning"
+          className="absolute -right-1 -top-1.5 h-5 w-5 items-center justify-center rounded-full bg-coral"
           style={{ transform: [{ rotate: "18deg" }] }}
         >
           <RNText style={{ fontSize: 12 }}>👑</RNText>

@@ -16,17 +16,17 @@ export function Brand({ size = "lg", className }: BrandProps) {
     <View className={cn("flex-row items-center gap-2.5", className)}>
       <View
         className={cn(
-          "items-center justify-center rounded-2xl bg-primary",
+          "items-center justify-center rounded-2xl bg-primary shadow-card",
           size === "lg" ? "h-14 w-14" : "h-10 w-10",
         )}
       >
         <Palette size={iconSize} color={colors.primaryForeground} />
       </View>
       <View>
-        <Text className={cn("font-extrabold tracking-tight text-foreground", size === "lg" ? "text-3xl" : "text-xl")}>
+        <Text className={cn("font-bold tracking-tight text-foreground", size === "lg" ? "text-3xl" : "text-xl")}>
           Skribbl
         </Text>
-        <Text className={cn("-mt-1 font-extrabold tracking-tight text-primary", size === "lg" ? "text-3xl" : "text-xl")}>
+        <Text className={cn("-mt-1 font-bold tracking-tight text-primary", size === "lg" ? "text-3xl" : "text-xl")}>
           Cloud
         </Text>
       </View>
