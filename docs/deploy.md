@@ -17,10 +17,76 @@
 
 ---
 
-## Prerequisites
+## 0. Deploy model — Cloudflare Dashboard Git integration (PRIMARY)
+
+> Production deploys are driven by **Cloudflare's GitHub integration**, configured
+> entirely in the Cloudflare dashboard. **No CLI and no GitHub Actions are needed
+> to deploy.** `.github/workflows/deploy.yml` is a manual fallback only (it does
+> not run on push). `ci.yml` still runs the full test suite on every push/PR.
+>
+> **Deploy branch: `main`.** Cloudflare rebuilds and redeploys on every push to `main`.
+
+### Worker (API) — "Workers" → Connect to Git (Workers Builds)
+
+Dashboard → **Workers & Pages → Create → Workers → Connect to Git** → pick the repo, production branch **`main`**:
+
+| Setting        | Value                                                                  |
+| -------------- | ---------------------------------------------------------------------- |
+| Worker name    | `skribbl-api` (must match `name` in `apps/api/wrangler.toml`)          |
+| Production branch | `main`                                                              |
+| Root directory | `apps/api`                                                             |
+| Build command  | `pnpm install --frozen-lockfile && pnpm --filter @skribbl/shared build` |
+| Deploy command | `npx wrangler deploy`                                                  |
+
+Node 22 is auto-selected from the repo `.nvmrc`. Bindings (Durable Object, D1, KV) and `[vars]` come from `wrangler.toml` — there is nothing to configure in the dashboard for those. First deploy prints `https://skribbl-api.<account>.workers.dev`.
+
+### Web app — "Pages" → Connect to Git
+
+Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → pick the repo, branch **`main`**:
+
+| Setting                 | Value                                                          |
+| ----------------------- | -------------------------------------------------------------- |
+| Project name            | `skribbl-cloud` (→ `https://skribbl-cloud.pages.dev`)          |
+| Production branch        | `main`                                                        |
+| Framework preset        | None                                                           |
+| Root directory          | `/` (repo root — required for the pnpm workspace)              |
+| Build command           | `pnpm build && pnpm --filter @skribbl/mobile run export:web`   |
+| Build output directory  | `apps/mobile/dist`                                             |
+| Environment variable    | `EXPO_PUBLIC_WS_URL = wss://skribbl-api.<account>.workers.dev` |
+
+`EXPO_PUBLIC_WS_URL` is **inlined into the JS bundle at build time** — it is a public value, not a secret. Set it under the Pages project's **Settings → Variables and Secrets → Production** (and Preview if you use preview deploys), then trigger a redeploy.
+
+### D1 + KV provisioning + migrations (all in the dashboard, no CLI)
+
+1. **D1:** Storage & Databases → D1 → **Create** → name `skribbl`. Copy the **Database ID** into `apps/api/wrangler.toml` `[[d1_databases]] database_id`.
+2. **KV:** Storage & Databases → KV → **Create namespace** → name `skribbl-kv`. Copy the **ID** into `wrangler.toml` `[[kv_namespaces]] id`.
+3. **Schema:** D1 → `skribbl` → **Console** tab → paste & run, **in order**: `apps/api/migrations/0001_init.sql`, then `0002_add_room_name.sql`, then `0003_word_packs_split.sql`.
+4. The Durable Object SQLite class migration (`[[migrations]] tag = "v1"`) is applied automatically on the first Worker deploy.
+
+### CORS for public launch (required)
+
+Set `ALLOWED_ORIGINS` in `wrangler.toml [vars]` to the exact web origin(s) before launch (commit → Worker redeploys):
+
+```toml
+ALLOWED_ORIGINS = "https://skribbl-cloud.pages.dev"
+```
+
+Add a comma-separated custom domain if used. WebSocket upgrades skip CORS; REST endpoints (create/list room) are origin-checked, so this MUST include the Pages origin or the web app's REST calls fail.
+
+### Order of operations
+
+1. Provision D1 + KV, paste IDs into `wrangler.toml`, commit to `main`.
+2. Run the 3 D1 migrations in the dashboard console.
+3. Connect the **Worker** to Git → deploy → copy the `…workers.dev` URL.
+4. Connect **Pages** to Git, set `EXPO_PUBLIC_WS_URL` to `wss://…workers.dev` → deploy → copy the `…pages.dev` URL.
+5. Set `ALLOWED_ORIGINS` to the `…pages.dev` origin, commit → Worker redeploys.
+
+---
+
+## Prerequisites (only for the optional manual/local CLI path below)
 
 - A Cloudflare account with **Workers + D1 + KV + Pages** enabled.
-- `wrangler` CLI authenticated: `npx wrangler login` (uses the same token as CI).
+- `wrangler` CLI authenticated: `npx wrangler login`.
 - `pnpm` 9.12.3+ and Node 22.
 - For mobile: an EAS account + `eas login` (or `EXPO_TOKEN` in CI).
 
@@ -201,9 +267,9 @@ Add these to **GitHub Actions secrets** (`Settings → Secrets and variables →
 
 Three workflows live in `.github/workflows/`:
 
-- **`ci.yml`** — runs on PRs and `develop` pushes: `pnpm install`, `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm lint`, `react-doctor`.
-- **`deploy.yml`** — runs on merges to `main`: deploys the Worker (with D1 migrations) and the Pages web export.
-- **`eas.yml`** — manual or tag-triggered EAS builds for iOS/Android.
+- **`ci.yml`** — runs on pushes to `main`/`develop` and PRs: install, build shared, typecheck, lint, unit tests, backend DO tests, frontend tests, protocol E2E, Playwright web E2E, and react-doctor.
+- **`deploy.yml`** — **manual fallback only** (`workflow_dispatch`; does NOT run on push). Production deploys go through the Cloudflare dashboard Git integration (§0). Use this only for a one-off CLI-token-based deploy from Actions.
+- **`eas.yml`** — manual or `v*.*.*` tag-triggered EAS builds for iOS/Android.
 
 ---
 
