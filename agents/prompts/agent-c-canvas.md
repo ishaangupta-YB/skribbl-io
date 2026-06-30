@@ -30,7 +30,7 @@ Set `EXPO_PUBLIC_WS_URL=ws://localhost:8787` for the app and connect to `${EXPO_
 ### 3b. Skia drawing canvas — `features/canvas/`
 - A `<DrawCanvas/>` using `@shopify/react-native-skia` that works on iOS, Android, AND web.
 - Tools: color palette, brush sizes, eraser, undo, clear. Only the active drawer can draw (disabled otherwise).
-- **Normalized coordinates (0–1)**: convert touch points to 0–1 against canvas size before sending; convert back when rendering remote strokes. This keeps drawings identical across screen sizes (a legacy bug we are fixing).
+- **Normalized coordinates (0–1)**: convert touch points to 0–1 against canvas size before sending; convert back when rendering remote strokes. This keeps drawings identical across screen sizes.
 - **Batch + throttle** points: coalesce into polylines and emit `draw` at ~30–60fps; respect `GAME.MAX_STROKE_POINTS`, `MIN/MAX_STROKE_WIDTH` from the contract.
 - Render remote `draw` / `draw:clear` / `draw:undo` frames smoothly. Maintain a local stroke list that resets on `draw:clear` and on each `turn:start`.
 

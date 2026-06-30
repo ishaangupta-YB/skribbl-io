@@ -2,6 +2,8 @@
   "name": "@skribbl/mobile",
   "version": "0.1.0",
   "private": true,
+  "author": "Ishaan Gupta",
+  "license": "MIT",
   "main": "expo-router/entry",
   "scripts": {
     "dev": "expo start --web",

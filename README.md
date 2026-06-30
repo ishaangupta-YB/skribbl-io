@@ -1,8 +1,6 @@
 # skribbl-cloud
 
-A cross-platform (iOS + Android + Web) skribbl-style multiplayer drawing & guessing game, rebuilt from the original Flutter/Node/MongoDB app onto a **single Expo (React Native) codebase** and a **100% Cloudflare backend** (Workers + Durable Objects + D1 + KV).
-
-> This folder is a self-contained rewrite. The original Flutter app (`../lib`, `../server`) is left untouched as reference.
+A cross-platform (iOS + Android + Web) skribbl-style multiplayer drawing & guessing game on a **single Expo (React Native) codebase** with a **100% Cloudflare backend** (Workers + Durable Objects + D1 + KV).
 
 ## Why this stack
 
@@ -10,7 +8,7 @@ A cross-platform (iOS + Android + Web) skribbl-style multiplayer drawing & guess
 | ------------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | Client (iOS/Android/Web) | **Expo + Expo Router**                                                         | One TypeScript codebase, three platforms                                            |
 | Drawing canvas           | **@shopify/react-native-skia**                                                 | GPU canvas that runs on native + web (CanvasKit)                                    |
-| Real-time backend        | **Cloudflare Durable Objects** (WebSocket Hibernation + Alarms)                | Socket.io can't run on Workers; one DO per room is the native, scalable replacement |
+| Real-time backend        | **Cloudflare Durable Objects** (WebSocket Hibernation + Alarms)                | One DO per room is the native, strongly-consistent, scalable real-time primitive on Workers |
 | Persistence              | **D1** (word packs, lobby registry) + **KV** (cache) + DO storage (live state) | Fully Cloudflare-native DB layer                                                    |
 | Contract                 | **`packages/shared`** (Zod)                                                    | Single source of truth shared by client + server                                    |
 
@@ -43,3 +41,11 @@ pnpm mock                  # ws://localhost:8787/api/rooms/<ROOM_ID>/ws
 ## Status
 
 Phases 0–4 are complete and verified: the backend is deployed to Cloudflare Workers + Durable Objects + D1 + KV, the web app is deployed to Cloudflare Pages, and the mobile app is configured for EAS builds. See `TODO.md` for the verification checklist and `docs/deploy.md` for the production runbook.
+
+## Author
+
+Designed, built, and maintained by **Ishaan Gupta**.
+
+## License
+
+[MIT](./LICENSE) © 2026 Ishaan Gupta

@@ -1,26 +1,25 @@
 # PLAN — skribbl-cloud
 
-Port the original Flutter + Node/Socket.io/MongoDB skribbl clone to one Expo (React Native) codebase on iOS/Android/Web with a 100% Cloudflare backend, built by parallel Devin/Claude agents.
+Build a cross-platform Expo (React Native) skribbl-style game on iOS/Android/Web with a 100% Cloudflare backend, built by parallel Devin/Claude agents.
 
 ## Locked decisions
 
-- **Layout:** new top-level folder `skribbl-cloud/`; original Flutter untouched.
+- **Layout:** the app lives in `skribbl-cloud/`.
 - **Backend:** Cloudflare **Durable Objects** (WebSocket Hibernation + Alarms), Workers Paid plan.
 - **Accounts:** anonymous nicknames only (guest avatar = emoji + color, stored on-device).
-- **Scope:** faithful port **+ enhancements** (modern UI, avatars, public/private lobbies, custom word packs, reactions, hints, sounds, animations).
-- **Git & process:** the git repo IS `skribbl-cloud/` (the parent Flutter dir is read-only reference). **The human owns all git** — agents never commit/push; they print **COMMIT CHECKPOINTs** and stop. A strict **Verifier** agent gates every phase.
+- **Scope:** full feature set (modern UI, avatars, public/private lobbies, custom word packs, reactions, hints, sounds, animations).
+- **Git & process:** the git repo IS `skribbl-cloud/`. **The human owns all git** — agents never commit/push; they print **COMMIT CHECKPOINTs** and stop. A strict **Verifier** agent gates every phase.
 
-## Architecture (old → new)
+## Backend design
 
-| Original | Replacement |
+| Component | Role |
 |---|---|
-| Express HTTP | Hono on Workers |
-| Socket.io server | One Durable Object per room (WS Hibernation) |
-| `io.to(room)` | DO holds room sockets, broadcasts |
-| Mongo `Room`/`Player` | DO in-memory state + DO storage |
-| `getWord()` adjectives | Drawable word packs (bundled) + D1 custom packs |
-| Client `setInterval` timer | **DO Alarms** (server-authoritative) |
-| Full word sent to all (cheat bug) | Masked word to guessers, full word only to drawer |
+| Hono on Workers | REST + WebSocket upgrade routing |
+| One Durable Object per room (WS Hibernation) | Authoritative room state; holds room sockets and broadcasts |
+| DO in-memory state + DO storage | Live room state, durable across hibernation |
+| Drawable word packs (bundled) + D1 custom packs | Words served per room |
+| **DO Alarms** | Server-authoritative turn/round timer |
+| Masked word to guessers, full word only to drawer | Anti-cheat word masking |
 
 ## Cloudflare services
 

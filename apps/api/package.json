@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "description": "Cloudflare Worker + Durable Object backend for skribbl-cloud (Agent A).",
+  "author": "Ishaan Gupta",
+  "license": "MIT",
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",

@@ -74,8 +74,8 @@ export const defaultRoomSettings: RoomSettings = {
 
 /**
  * A drawing point. Coordinates are NORMALIZED to [0,1] so a stroke drawn on a
- * phone renders identically on a tablet or the web — fixing the legacy app's
- * device-specific raw dx/dy bug.
+ * phone renders identically on a tablet or the web, independent of device
+ * resolution.
  */
 export const pointSchema = z.object({
   x: z.number(),
@@ -118,7 +118,7 @@ export type ScoreEntry = z.infer<typeof scoreEntrySchema>;
 /**
  * The sanitized room snapshot broadcast to clients. The server fills the
  * drawer-only fields (`word`, `wordChoices`) per-recipient; guessers receive
- * only `maskedWord` / `wordLength` so the answer can never leak (legacy bug).
+ * only `maskedWord` / `wordLength` so the answer can never leak to guessers.
  */
 export const publicRoomStateSchema = z.object({
   roomId: z.string(),

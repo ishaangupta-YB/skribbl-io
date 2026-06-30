@@ -46,8 +46,7 @@ set -euo pipefail
 : "${SKIP_INSTALL:=0}"              # set 1 to skip `pnpm install && pnpm build` per worktree
 
 # ---- derived paths (NO git calls here, so this file sources cleanly) ----
-# The git repo IS skribbl-cloud itself (the final app). The parent folder is kept
-# only as read-only reference to the original Flutter project.
+# The git repo IS skribbl-cloud itself (the final app).
 AGENTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPTS_DIR="$AGENTS_DIR/prompts"
 REPO_ROOT="$(cd "$AGENTS_DIR/.." && pwd)"             # .../skribbl-cloud  (the git repo root)

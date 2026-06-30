@@ -20,14 +20,14 @@
                                                                     │ R2 (optional replays)
 ```
 
-## Why Durable Objects (not Socket.io)
+## Why Durable Objects
 
-Socket.io needs a long-lived Node process and sticky sessions — neither exists on Workers. A **Durable Object** is a single-threaded, strongly-consistent actor with its own storage and a stable id. Mapping **one DO per room** (`idFromName(roomId)`) gives us:
+Workers are stateless and short-lived, so real-time room state needs a stable home. A **Durable Object** is a single-threaded, strongly-consistent actor with its own storage and a stable id. Mapping **one DO per room** (`idFromName(roomId)`) gives us:
 
 - A natural home for authoritative room state (no DB round-trip per draw event).
 - Built-in broadcast: the DO keeps the set of connected WebSockets.
 - **WebSocket Hibernation**: idle rooms evict from memory but keep sockets, so cost ≈ active rooms only.
-- **Alarms**: a server-owned timer to drive turn/round transitions — fixing the legacy client-side timer.
+- **Alarms**: a server-owned timer to drive turn/round transitions — server-authoritative.
 
 ## Authoritative game loop (in the DO)
 
@@ -60,10 +60,10 @@ No player accounts (anonymous nicknames). Avatars (emoji + color) live on the de
 - **`@shopify/react-native-skia`** canvas using **normalized 0–1 coordinates**, so a drawing looks the same on every screen size and platform.
 - **NativeWind** design system (light/dark), **Reanimated/Moti** animations, **expo-av/expo-haptics** for feedback.
 
-## Key correctness/security improvements over the legacy app
+## Key correctness/security properties
 
 1. **Word never leaks** to guessers — only `maskedWord`/`wordLength`; full `word` is sent solely to the drawer.
-2. **Server-authoritative timer** via Alarms (legacy ran the timer on each client).
-3. **Bounded scoring** (`@skribbl/shared/scoring`) instead of `round(200/timeTaken*10)`.
-4. **No secrets in code** — Mongo URI/IP are gone; config via Wrangler bindings + Expo public env.
-5. **Resolution-independent drawing** via normalized coordinates (legacy sent raw device pixels).
+2. **Server-authoritative timer** via Alarms.
+3. **Bounded scoring** via `@skribbl/shared/scoring`.
+4. **No secrets in code** — config via Wrangler bindings + Expo public env.
+5. **Resolution-independent drawing** via normalized coordinates.

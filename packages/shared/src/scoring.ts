@@ -3,8 +3,7 @@ import { clamp } from "./utils";
 
 /**
  * Points awarded to a guesser. More time remaining + guessing earlier = more
- * points. Replaces the legacy `round((200 / timeTaken) * 10)` formula, which
- * produced unbounded scores for fast guesses.
+ * points. Bounded so fast guesses can't produce runaway scores.
  */
 export function calculateGuesserScore(params: {
   timeRemainingMs: number;
@@ -27,7 +26,7 @@ export function calculateGuesserScore(params: {
 
 /**
  * Points for the drawer at the end of a turn, proportional to the share of
- * players who guessed correctly. (The legacy game never rewarded the drawer.)
+ * players who guessed correctly.
  */
 export function calculateDrawerScore(params: {
   correctGuessers: number;

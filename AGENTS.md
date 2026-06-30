@@ -2,7 +2,7 @@
 
 How parallel Devin/Claude agents collaborate on `skribbl-cloud` via **tmux + Devin CLI** without stepping on each other. Read this fully before starting.
 
-> **Git model:** the git repository IS this `skribbl-cloud/` folder (the final app). The parent folder is the original Flutter project, kept read-only for reference. **The human owns ALL git history** — agents NEVER commit, push, merge, or rebase (see “Commit & integration protocol”).
+> **Git model:** the git repository IS this `skribbl-cloud/` folder (the final app). **The human owns ALL git history** — agents NEVER commit, push, merge, or rebase (see “Commit & integration protocol”).
 
 ## Golden rules
 

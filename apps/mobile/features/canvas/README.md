@@ -3,7 +3,7 @@
 Cross-platform (iOS / Android / Web) drawing surface plus the tools and wiring
 that connect it to the realtime layer (`lib/realtime`). Strokes travel as
 **normalized [0,1] coordinates** (the contract's `pointSchema`), so a drawing
-looks identical on every screen — the fix for the legacy raw-pixel bug.
+looks identical on every screen, independent of device resolution.
 
 ## Public API (what Agent D consumes)
 

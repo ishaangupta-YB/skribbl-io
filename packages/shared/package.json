@@ -2,6 +2,8 @@
   "name": "@skribbl/shared",
   "version": "1.0.0",
   "private": true,
+  "author": "Ishaan Gupta",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -8,9 +8,8 @@ export interface WordPack {
 }
 
 /**
- * Bundled default word packs. These are *drawable nouns* — an intentional
- * upgrade over the legacy `getWord.js`, which returned ~1100 abstract
- * adjectives ("aback", "abhorrent") that are nearly impossible to draw.
+ * Bundled default word packs of *drawable nouns* — concrete, easy-to-draw
+ * things, deliberately avoiding abstract words.
  *
  * Additional/custom packs live in Cloudflare D1 and are merged at runtime by
  * the backend; this bundle guarantees the game works even with an empty DB.

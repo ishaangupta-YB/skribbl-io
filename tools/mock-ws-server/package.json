@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "description": "Local WebSocket server implementing the @skribbl/shared contract so the Expo client can be developed before the Cloudflare backend is ready.",
+  "author": "Ishaan Gupta",
+  "license": "MIT",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",

@@ -5,7 +5,7 @@ import type { Point } from "@skribbl/shared";
  *
  * Strokes travel over the wire in NORMALIZED [0,1] space (see `pointSchema` in
  * the contract) so a drawing made on a phone renders identically on a tablet or
- * the web — this is the fix for the legacy app's device-specific raw dx/dy bug.
+ * the web, independent of device resolution.
  * Convert on the way out (touch px -> 0..1) and on the way in (0..1 -> px).
  */
 export interface Size {

@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "description": "Phase 4 QA: E2E playthrough, load test, and security pass for skribbl-cloud.",
+  "author": "Ishaan Gupta",
+  "license": "MIT",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config e2e/vitest.config.ts",
